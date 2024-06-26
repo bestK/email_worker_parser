@@ -1,4 +1,12 @@
 name = "email_worker_parser"
-main = "src/index.js"
-compatibility_date = "2022-12-05"
+main = "src/index.ts"
+compatibility_date = "2024-06-06"
 usage_model = "unbound"
+
+[[d1_databases]]
+binding = "DB" # i.e. available in your Worker on env.DB
+database_name = ""
+database_id = ""
+
+[vars]
+forward_address = "xxx@email.com;yyy@email.com"
