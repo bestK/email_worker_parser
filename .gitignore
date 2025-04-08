@@ -173,3 +173,4 @@ dist
 
 wrangler.toml
 .wrangler/
+wrangler.toml.prod
