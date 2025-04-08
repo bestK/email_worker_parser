@@ -1,3 +1,4 @@
+
 name = "email_worker_parser"
 main = "src/index.ts"
 compatibility_date = "2024-06-06"
@@ -9,4 +10,9 @@ database_name = ""
 database_id = ""
 
 [vars]
-forward_address = "xxx@email.com;yyy@email.com"
+forward_address = ""
+CLOUDFLARE_EMAIL = ""
+CLOUDFLARE_API_KEY = ""
+ZONE_ID = ""
+ACCOUNT_ID = ""
+EMAIL_DOMAIN = ""
