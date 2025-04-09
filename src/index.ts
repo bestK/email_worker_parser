@@ -327,6 +327,13 @@ register('GET', '/ui', async (request, env, ctx, params) => {
                     50% { opacity: 0; }
                     100% { opacity: 1; }
                 }
+
+                .header {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    width: 100%;
+                }
                 .help-link {
                     position: absolute;
                     top: 20px;
@@ -355,16 +362,31 @@ register('GET', '/ui', async (request, env, ctx, params) => {
                     border-radius: 5px;
                     box-shadow: 0 0 5px #00ff00;
                 }
+
+                #parser {
+                    background-color: #333;
+                    color: #00ff00;
+                    border: 1px solid #00ff00;
+                    padding: 12px;
+                    font-size: 18px;
+                }
                     
             </style>
         </head>
         <body>
-            <a href="https://github.com/bestk/email_worker_parser" target="_blank" class="github-link">Github</a>
-            <a href="/help" class="help-link">Help</a>
+            <div class="header">
+                <select id="parser">
+                    <option value="cursor">Cursor</option>
+                </select>
+                <a href="https://github.com/bestk/email_worker_parser" target="_blank" class="github-link">Github</a>
+                <a href="/help" class="help-link">Help</a>
+                
+            </div>
             <h1> Email Interface</h1>
             <button id="create-email-btn">Create New Email</button>
             <input id="email-address" type="text" placeholder="Enter a historical email address" />
             <button id="poll-email-btn">Start Polling</button>
+    
             <div class="email-container" id="email-container"></div>
 
             <script>
@@ -387,7 +409,8 @@ register('GET', '/ui', async (request, env, ctx, params) => {
                 // Function to fetch emails for the current email address
                 async function fetchEmails(address) {
                     const limit = 5;  // You can adjust this or make it dynamic
-                    const response = await fetch(\`/email/\${address}?limit=\${limit}\`);
+                    const parser = document.getElementById('parser').value;
+                    const response = await fetch(\`/email/\${address}?limit=\${limit}&parser=\${parser}\`);
                     const data = await response.json();
                     return data.success ? data.data : [];
                 }
@@ -406,11 +429,13 @@ register('GET', '/ui', async (request, env, ctx, params) => {
                             const emailDiv = document.createElement('div');
                             emailDiv.className = 'email';
                             emailDiv.setAttribute('data-id', email.createdAt);
+                            
                             emailDiv.innerHTML = \`
                                 <h3 class="blink">Subject: \${email.subject}</h3>
                                 <p><strong>From:</strong> \${email.from}</p>
                                 <p><strong>To:</strong> \${email.to}</p>
-                                <p><strong>Text:</strong> \${email.text}</p>
+                                <p><strong>Html:</strong> \${email.html}</p> 
+                                <p><strong>Parsed Code:</strong> \${email.parsed_code}</p>
                                 <span>\${email.createdAt}</span>
                             \`;
                             emailContainer.appendChild(emailDiv);
@@ -432,6 +457,8 @@ register('GET', '/ui', async (request, env, ctx, params) => {
                         }, 5000);  // Poll every 5 seconds
                     }
                 });
+
+              
             </script>
         </body>
         </html>
