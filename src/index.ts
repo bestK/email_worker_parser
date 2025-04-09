@@ -474,8 +474,8 @@ register('GET', '/ui', async (request, env, ctx, params) => {
 // index
 register('GET', '/', async (request, env, ctx, params) => {
     const url = new URL(request.url);
-    const helpUrl = new URL('/help', url.origin).toString();
-    return Response.redirect(helpUrl);
+    const UI_URL = new URL('/ui', url.origin).toString();
+    return Response.redirect(UI_URL);
 });
 
 
