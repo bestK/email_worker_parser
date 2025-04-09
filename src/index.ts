@@ -168,11 +168,11 @@ register('GET', '/email/:address', async (request, env, ctx, params) => {
 register('GET', '/help', async (request, env, ctx, params) => {
     // 返回帮助信息 html
     const html = `
-        <!DOCTYPE html>
+<!DOCTYPE html>
         <html lang="en">
-        <head>
-            <meta charset="UTF-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
             <title>Help Page</title>
             <style>
                 body {
@@ -203,7 +203,7 @@ register('GET', '/help', async (request, env, ctx, params) => {
                     overflow-x: auto;
                 }
             </style>
-        </head>
+</head>
         <body>
             <h1>API Help & Documentation</h1>
             <p>Welcome to the API documentation! Below are the available endpoints and their usage:</p>
@@ -224,6 +224,8 @@ GET /email/create
 POST /email/:address?limit=5&parser=exampleParser
             </pre>
             <p>For more information, feel free to contact support.</p>
+            <!-- 返回 ui 页面 -->
+            <a href="/ui">UI</a>
         </body>
         </html>
     `;
@@ -232,6 +234,215 @@ POST /email/:address?limit=5&parser=exampleParser
         headers: { 'Content-Type': 'text/html' },
     });
 });
+
+// ui
+register('GET', '/ui', async (request, env, ctx, params) => {
+    const html = `
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title> Interface</title>
+            <style>
+                body {
+                    font-family: 'Courier New', Courier, monospace;
+                    background-color: #000;
+                    color: #00ff00;
+                    padding: 20px;
+                    margin: 0;
+                    height: 100vh;
+                    display: flex;
+                    flex-direction: column;
+                    justify-content: flex-start;
+                    align-items: center;
+                    overflow: hidden;
+                }
+                h1 {
+                    color: #00ff00;
+                    font-size: 3em;
+                    text-shadow: 0 0 10px #00ff00;
+                    margin-bottom: 30px;
+                }
+                button {
+                    background-color: #00ff00;
+                    color: #000;
+                    border: none;
+                    padding: 12px 24px;
+                    font-size: 18px;
+                    cursor: pointer;
+                    border-radius: 5px;
+                    margin-top: 20px;
+                    box-shadow: 0 0 10px #00ff00;
+                }
+                button:hover {
+                    background-color: #00cc00;
+                    box-shadow: 0 0 20px #00ff00;
+                }
+                input {
+                    background-color: #333;
+                    color: #00ff00;
+                    border: 1px solid #00ff00;
+                    padding: 12px;
+                    font-size: 18px;
+                    margin-top: 20px;
+                    border-radius: 5px;
+                    width: 300px;
+                    box-shadow: 0 0 5px #00ff00;
+                }
+                .email-container {
+                    margin-top: 30px;
+                    width: 100%;
+                    max-width: 800px;
+                    max-height: 400px;
+                    overflow-y: auto;
+                    border-top: 1px solid #00ff00;
+                    padding-top: 20px;
+                }
+                .email {
+                    background-color: #111;
+                    border: 1px solid #00ff00;
+                    padding: 15px;
+                    margin-bottom: 10px;
+                    border-radius: 5px;
+                    box-shadow: 0 0 10px #00ff00;
+                }
+                .email h3 {
+                    margin: 0;
+                    color: #00ff00;
+                    font-size: 1.5em;
+                }
+                .email p {
+                    margin: 5px 0;
+                }
+                .email span {
+                    font-size: 12px;
+                    color: #00ff00;
+                }
+                .blink {
+                    animation: blink 1s infinite;
+                }
+                @keyframes blink {
+                    0% { opacity: 1; }
+                    50% { opacity: 0; }
+                    100% { opacity: 1; }
+                }
+                .help-link {
+                    position: absolute;
+                    top: 20px;
+                    right: 20px;
+                    color: #00ff00;
+                    font-size: 16px;
+                    text-decoration: none;
+                    padding: 5px 10px;
+                    border: 1px solid #00ff00;
+                    border-radius: 5px;
+                    box-shadow: 0 0 5px #00ff00;
+                }
+                .help-link:hover {
+                    background-color: #00cc00;
+                    box-shadow: 0 0 10px #00ff00;
+                }
+                .github-link {
+                    position: absolute;
+                    top: 20px;
+                    right: 100px;
+                    color: #00ff00;
+                    font-size: 16px;
+                    text-decoration: none;
+                    padding: 5px 10px;
+                    border: 1px solid #00ff00;
+                    border-radius: 5px;
+                    box-shadow: 0 0 5px #00ff00;
+                }
+                    
+            </style>
+        </head>
+        <body>
+            <a href="https://github.com/bestk/email_worker_parser" target="_blank" class="github-link">Github</a>
+            <a href="/help" class="help-link">Help</a>
+            <h1> Email Interface</h1>
+            <button id="create-email-btn">Create New Email</button>
+            <input id="email-address" type="text" placeholder="Enter a historical email address" />
+            <button id="poll-email-btn">Start Polling</button>
+            <div class="email-container" id="email-container"></div>
+
+            <script>
+                const createEmailBtn = document.getElementById('create-email-btn');
+                const pollEmailBtn = document.getElementById('poll-email-btn');
+                const emailContainer = document.getElementById('email-container');
+                const emailAddressInput = document.getElementById('email-address');
+                let polling = false;
+                let currentEmail = null;
+
+                // Function to create a new email address
+                createEmailBtn.addEventListener('click', async () => {
+                    const response = await fetch('/email/create');
+                    const data = await response.json();
+                    currentEmail = data.data.address; // Save the new email address
+                    alert('New email created: ' + currentEmail);
+                    emailAddressInput.value = currentEmail; // Autofill the email input
+                });
+
+                // Function to fetch emails for the current email address
+                async function fetchEmails(address) {
+                    const limit = 5;  // You can adjust this or make it dynamic
+                    const response = await fetch(\`/email/\${address}?limit=\${limit}\`);
+                    const data = await response.json();
+                    return data.success ? data.data : [];
+                }
+
+                // Polling function
+                async function pollEmails() {
+                    if (!currentEmail && !emailAddressInput.value) {
+                        alert('Please create an email first or enter a historical email address.');
+                        return;
+                    }
+                    const address = currentEmail || emailAddressInput.value;
+                    const emails = await fetchEmails(address);
+
+                    emails.forEach((email) => {
+                        if (!document.querySelector(\`[data-id="\${email.createdAt}"]\`)) {
+                            const emailDiv = document.createElement('div');
+                            emailDiv.className = 'email';
+                            emailDiv.setAttribute('data-id', email.createdAt);
+                            emailDiv.innerHTML = \`
+                                <h3 class="blink">Subject: \${email.subject}</h3>
+                                <p><strong>From:</strong> \${email.from}</p>
+                                <p><strong>To:</strong> \${email.to}</p>
+                                <p><strong>Text:</strong> \${email.text}</p>
+                                <span>\${email.createdAt}</span>
+                            \`;
+                            emailContainer.appendChild(emailDiv);
+                        }
+                    });
+                }
+
+                // Start polling on clicking the button
+                pollEmailBtn.addEventListener('click', () => {
+                    if (polling) {
+                        polling = false;
+                        pollEmailBtn.textContent = 'Start Polling';
+                    } else {
+                        polling = true;
+                        pollEmailBtn.textContent = 'Stop Polling';
+                        pollEmails();
+                        setInterval(async () => { 
+                            if (polling) await pollEmails();
+                        }, 5000);  // Poll every 5 seconds
+                    }
+                });
+            </script>
+        </body>
+        </html>
+    `;
+
+    return new Response(html, {
+        headers: { 'Content-Type': 'text/html' },
+    });
+});
+
+
 
 // index
 register('GET', '/', async (request, env, ctx, params) => {
