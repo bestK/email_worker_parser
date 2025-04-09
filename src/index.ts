@@ -117,41 +117,129 @@ register('GET', '/email/create', async (request, env, ctx, params) => {
     }
 });
 
-// 查询某个 email 地址收到的内容
+// email/:address 路由处理
 register('GET', '/email/:address', async (request, env, ctx, params) => {
-    const address = params.address;
+    const { address } = params; // 获取 :address 部分
     const url = new URL(request.url);
+
+    // 获取查询参数 'limit' 和 'parser'
+    const limit = url.searchParams.get('limit');
+    const parserName = url.searchParams.get('parser');
+
+    // 默认情况下限制结果数量
+    const maxResults = limit ? parseInt(limit, 10) : 10; // 默认10条记录
+    const parser = parserName ? parsers[parserName] : null;
+
     try {
         const { results, success, meta } = await env.DB
-            .prepare('SELECT "subject", "from", "to", "html", "text", "createdAt" FROM Email WHERE "to" = ?')
-            .bind(address)
+            .prepare('SELECT "subject", "from", "to", "html", "text", "createdAt" FROM Email WHERE "to" = ? ORDER BY createdAt DESC LIMIT ?')
+            .bind(address, maxResults) // 绑定 address 和 limit
             .run();
 
         if (success) {
-            const parserName = url.searchParams.get('parser');
-            if (parserName && parsers[parserName]) {
-                const parse = parsers[parserName];
-                for (const item of results) {
-                    item['parsed_code'] = parse(item.text);
-                }
+            // 如果存在解析器，解析邮件内容
+            if (parser) {
+                results.forEach((item) => {
+                    const code = parser(item.text);
+                    item['parsed_code'] = code;
+                });
             }
 
             return new Response(JSON.stringify({ success: true, data: results }), {
                 headers: { 'content-type': 'application/json' },
             });
         } else {
+            console.error("D1 query failed:", meta);
             return new Response(JSON.stringify({ success: false, error: 'Failed to retrieve emails' }), {
                 status: 500,
                 headers: { 'content-type': 'application/json' },
             });
         }
     } catch (e: any) {
-        return new Response(JSON.stringify({ success: false, error: 'query error', details: e.message }), {
+        console.error("Error fetching from D1:", e);
+        return new Response(JSON.stringify({ success: false, error: 'Query error', details: e.message }), {
             status: 500,
             headers: { 'content-type': 'application/json' },
         });
     }
 });
+
+// help
+register('GET', '/help', async (request, env, ctx, params) => {
+    // 返回帮助信息 html
+    const html = `
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Help Page</title>
+            <style>
+                body {
+                    font-family: Arial, sans-serif;
+                    background-color: #f4f4f9;
+                    color: #333;
+                    padding: 20px;
+                }
+                h1 {
+                    color: #007BFF;
+                }
+                p {
+                    font-size: 1.1rem;
+                    margin-bottom: 10px;
+                }
+                ul {
+                    list-style-type: none;
+                    padding-left: 0;
+                }
+                li {
+                    margin: 10px 0;
+                }
+                pre {
+                    background-color: #f1f1f1;
+                    padding: 10px;
+                    border-radius: 5px;
+                    font-size: 0.9rem;
+                    overflow-x: auto;
+                }
+            </style>
+        </head>
+        <body>
+            <h1>API Help & Documentation</h1>
+            <p>Welcome to the API documentation! Below are the available endpoints and their usage:</p>
+            <ul>
+                <li><strong>/email/create</strong> - <em>Create a random email address and get the endpoint to forward emails</em></li>
+                <li><strong>/email/:address</strong> - <em>Get the email content received by a specific address</em></li>
+            </ul>
+            
+            <h2>Parameters for /email/:address:</h2>
+            <ul>
+                <li><strong>limit</strong>: <em>Optional. Limits the number of emails returned. Default is 10.</em></li>
+                <li><strong>parser</strong>: <em>Optional. Specifies the parser to be used for email content.</em></li>
+            </ul>
+            
+            <h2>Example Usage:</h2>
+            <pre>
+GET /email/create
+POST /email/:address?limit=5&parser=exampleParser
+            </pre>
+            <p>For more information, feel free to contact support.</p>
+        </body>
+        </html>
+    `;
+
+    return new Response(html, {
+        headers: { 'Content-Type': 'text/html' },
+    });
+});
+
+// index
+register('GET', '/', async (request, env, ctx, params) => {
+    const url = new URL(request.url);
+    const helpUrl = new URL('/help', url.origin).toString();
+    return Response.redirect(helpUrl);
+});
+
 
 export default {
     async fetch(request: Request, env: Env, ctx: Ctx): Promise<Response> {
