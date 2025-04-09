@@ -1,18 +1,16 @@
-
 name = "email_worker_parser"
 main = "src/index.ts"
-compatibility_date = "2024-06-06"
-usage_model = "unbound"
+compatibility_date = "2024-06-06" 
 
 [[d1_databases]]
 binding = "DB" # i.e. available in your Worker on env.DB
-database_name = ""
-database_id = ""
+database_name = "cf_email_1"
+database_id = "202c0469-b860-4993-ba42-67f8d303012c"
 
 [vars]
-forward_address = ""
-CLOUDFLARE_EMAIL = ""
-CLOUDFLARE_API_KEY = ""
-ZONE_ID = ""
-ACCOUNT_ID = ""
-EMAIL_DOMAIN = ""
+forward_address = "1138493417@qq.com"
+CLOUDFLARE_EMAIL = "1995kaikai@gmail.com"
+CLOUDFLARE_API_KEY = "127c131ff98558cc983f021ef2b8e804eeddc"
+ZONE_ID = "662c7c74a509d55b35edec89cb7ed26b"
+ACCOUNT_ID = "d51953f7c46f6c25fb3fd6db40ff8255"
+EMAIL_DOMAIN = "linkof.link"
