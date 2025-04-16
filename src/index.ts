@@ -435,6 +435,7 @@ register('GET', '/ui', async (request, env, ctx, params) => {
                                 <p><strong>From:</strong> \${email.from}</p>
                                 <p><strong>To:</strong> \${email.to}</p>
                                 <p><strong>Html:</strong> \${email.html}</p> 
+                                <p><strong>Text:</strong> \${email.text}</p>
                                 <p><strong>Parsed Code:</strong> \${email.parsed_code}</p>
                                 <span>\${email.createdAt}</span>
                             \`;

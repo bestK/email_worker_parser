@@ -1,0 +1,16 @@
+name = "email_worker_parser"
+main = "src/index.ts"
+compatibility_date = "2024-06-06" 
+
+[[d1_databases]]
+binding = "DB" # i.e. available in your Worker on env.DB
+database_name = "cf_email_1"
+database_id = ""
+
+[vars]
+forward_address = ""
+CLOUDFLARE_EMAIL = ""
+CLOUDFLARE_API_KEY = ""
+ZONE_ID = ""
+ACCOUNT_ID = ""
+EMAIL_DOMAIN = ""
