@@ -1,5 +1,5 @@
-import * as PostalMimeMod from './vendor/postal-mime-node.js';
 import { EmailMessage } from 'cloudflare:email';
+import * as PostalMimeMod from './vendor/postal-mime-node.js';
 
 export interface Env {
     DB: D1Database;
@@ -83,7 +83,24 @@ async function streamToArrayBuffer(stream: ReadableStream, streamSize: number): 
     return result;
 }
 
-const PostalMimeCtor: any = (PostalMimeMod as any).default || (PostalMimeMod as any);
+function resolvePostalMimeCtor(mod: any): any {
+    const candidates = [
+        mod,
+        mod?.default,
+        mod?.postalMime,
+        mod?.default?.postalMime,
+        mod?.postalMime?.default,
+        mod?.default?.postalMime?.default,
+    ];
+
+    for (const candidate of candidates) {
+        if (typeof candidate === 'function') return candidate;
+    }
+
+    throw new Error('Failed to resolve PostalMime constructor');
+}
+
+const PostalMimeCtor: any = resolvePostalMimeCtor(PostalMimeMod as any);
 
 // --- 简易路由系统 ---
 type Handler = (request: Request, env: Env, ctx: Ctx, params: Record<string, string>) => Promise<Response>;
@@ -124,9 +141,17 @@ function matchRoute(method: string, url: string): { handler: Handler, params: Re
 // 创建 Email 地址（不再按地址动态创建 Cloudflare Email Routing 规则）
 // 前置要求：Cloudflare 邮件路由中需有一条兜底规则把邮件交给本 Worker（例如 *@EMAIL_DOMAIN -> email_worker_parser）
 register('GET', '/email/create', async (request, env, ctx, params) => {
+    const domain = (env.EMAIL_DOMAIN || '').trim();
+    if (!domain) {
+        return jsonResponse({
+            success: false,
+            error: 'EMAIL_DOMAIN is not configured',
+        }, { status: 500 });
+    }
+
     const randomEmail = Math.random().toString(36).substring(2, 15)
         + Math.random().toString(36).substring(2, 15)
-        + '@' + env.EMAIL_DOMAIN;
+        + '@' + domain;
 
     return jsonResponse({
         success: true,
@@ -166,80 +191,6 @@ register('GET', '/email/:address', async (request, env, ctx, params) => {
     }
 });
 
-// help
-register('GET', '/help', async (request, env, ctx, params) => {
-    // 返回帮助信息 html
-    const html = `
-<!DOCTYPE html>
-        <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>Help Page</title>
-            <style>
-                body {
-                    font-family: Arial, sans-serif;
-                    background-color: #f4f4f9;
-                    color: #333;
-                    padding: 20px;
-                }
-                h1 {
-                    color: #007BFF;
-                }
-                p {
-                    font-size: 1.1rem;
-                    margin-bottom: 10px;
-                }
-                ul {
-                    list-style-type: none;
-                    padding-left: 0;
-                }
-                li {
-                    margin: 10px 0;
-                }
-                pre {
-                    background-color: #f1f1f1;
-                    padding: 10px;
-                    border-radius: 5px;
-                    font-size: 0.9rem;
-                    overflow-x: auto;
-                }
-            </style>
-</head>
-        <body>
-            <h1>API Help & Documentation</h1>
-            <p>Welcome to the API documentation! Below are the available endpoints and their usage:</p>
-            <ul>
-                <li><strong>/email/create</strong> - <em>Create a random email address and get the endpoint to forward emails</em></li>
-                <li><strong>/email/:address</strong> - <em>Get the email content received by a specific address</em></li>
-            </ul>
-            
-            <h2>Parameters for /email/:address:</h2>
-            <ul>
-                <li><strong>limit</strong>: <em>Optional. Limits the number of emails returned. Default is 10.</em></li>
-            </ul>
-            
-            <h2>Example Usage:</h2>
-            <pre>
-GET /email/create
-GET /email/:address?limit=5
-            </pre>
-            <p>For more information, feel free to contact support.</p>
-            <!-- 返回 ui 页面 -->
-            <a href="/ui">UI</a>
-        </body>
-        </html>
-    `;
-
-    return new Response(html, {
-        headers: { 'Content-Type': 'text/html', ...CORS_HEADERS },
-    });
-});
-
-// ui
-register('GET', '/ui', async (request, env, ctx, params) => {
-    return serveUiFromUrl(env);
-});
 
 
 
