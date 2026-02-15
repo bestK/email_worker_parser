@@ -1,7 +1,5 @@
 # email_worker_parser
 
-![](./image/ui.png)
-
 # 
 ``` shell
 
@@ -24,7 +22,15 @@ CLOUDFLARE_API_KEY = ""
 ZONE_ID = ""
 ACCOUNT_ID = ""
 EMAIL_DOMAIN = ""
+UI_URL = "https://<your-github-username>.github.io/email_worker_parser/"
 ```
+
+### GitHub Pages frontend
+This repo now includes a minimal static frontend at `docs/index.html`.
+
+1. Push code to GitHub.
+2. In GitHub repo settings, enable Pages from branch `main` and folder `/docs`.
+3. Set `UI_URL` in your Worker vars to your Pages URL, then redeploy.
 
 ```
 wrangler deploy
@@ -47,7 +53,7 @@ get https://yourname.workers.dev/email/create
 }
 
 # get email list
-get https://yourname.workers.dev/email/{address}?parser=cursor
+get https://yourname.workers.dev/email/{address}?limit=5
 
 {
     "data": [
@@ -59,7 +65,6 @@ get https://yourname.workers.dev/email/{address}?parser=cursor
             "html": null,
             "text": null,
             "createdAt": "2024-06-26 06:01:05",
-            "parsed_code": "703589"
         } 
  
     ],

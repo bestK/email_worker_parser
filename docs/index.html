@@ -1,0 +1,353 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Email Worker UI</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600&family=IBM+Plex+Mono:wght@400;500&display=swap');
+
+    :root {
+      --bg-0: #f4efe3;
+      --bg-1: #efe7d8;
+      --ink: #1c1a15;
+      --ink-muted: #5c5648;
+      --line: #c8bfae;
+      --accent: #1f7a63;
+      --accent-2: #185f4e;
+      --card: #fffcf6;
+      --danger: #a1322d;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      color: var(--ink);
+      font-family: 'Space Grotesk', sans-serif;
+      background:
+        radial-gradient(1200px 500px at 15% -10%, #fff6df 0%, transparent 70%),
+        radial-gradient(900px 500px at 100% 0%, #e9f4ee 0%, transparent 70%),
+        linear-gradient(160deg, var(--bg-0), var(--bg-1));
+      min-height: 100vh;
+    }
+
+    .shell {
+      max-width: 940px;
+      margin: 0 auto;
+      padding: 28px 18px 40px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(1.6rem, 2vw + 1rem, 2.5rem);
+      letter-spacing: 0.01em;
+    }
+
+    .sub {
+      margin: 8px 0 0;
+      color: var(--ink-muted);
+      font-size: 0.98rem;
+    }
+
+    .panel {
+      margin-top: 18px;
+      background: color-mix(in srgb, var(--card) 90%, #ffffff);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 16px;
+      box-shadow: 0 14px 34px rgba(48, 43, 32, 0.08);
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+    }
+
+    @media (min-width: 860px) {
+      .grid {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    label {
+      display: block;
+      font-size: 0.86rem;
+      color: var(--ink-muted);
+      margin-bottom: 6px;
+    }
+
+    input {
+      width: 100%;
+      padding: 10px 11px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: #fffdf7;
+      color: var(--ink);
+      outline: none;
+      font-size: 0.95rem;
+      transition: border-color 140ms ease, box-shadow 140ms ease;
+    }
+
+    input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(31, 122, 99, 0.13);
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    button {
+      border: 0;
+      border-radius: 10px;
+      padding: 10px 14px;
+      font-weight: 600;
+      font-family: 'Space Grotesk', sans-serif;
+      cursor: pointer;
+      background: var(--accent);
+      color: #f6fdf9;
+      transition: transform 120ms ease, background 120ms ease;
+    }
+
+    button:hover {
+      transform: translateY(-1px);
+      background: var(--accent-2);
+    }
+
+    button.secondary {
+      background: #ece5d6;
+      color: #29251f;
+    }
+
+    .status {
+      margin-top: 12px;
+      padding: 10px 11px;
+      border-radius: 10px;
+      border: 1px solid var(--line);
+      background: #faf6ee;
+      color: var(--ink-muted);
+      font-size: 0.92rem;
+      min-height: 42px;
+      display: flex;
+      align-items: center;
+    }
+
+    .status.err {
+      color: var(--danger);
+      border-color: #d7aaa7;
+      background: #fff4f3;
+    }
+
+    .emails {
+      margin-top: 16px;
+      display: grid;
+      gap: 10px;
+    }
+
+    .mail {
+      border: 1px solid var(--line);
+      background: #fffdf8;
+      border-radius: 12px;
+      padding: 12px;
+      animation: fadeIn 260ms ease;
+    }
+
+    .mail h3 {
+      margin: 0 0 6px;
+      font-size: 1rem;
+      line-height: 1.4;
+    }
+
+    .meta {
+      margin: 0;
+      color: var(--ink-muted);
+      font-size: 0.85rem;
+    }
+
+    .txt {
+      margin: 8px 0 0;
+      white-space: pre-wrap;
+      line-height: 1.45;
+      font-size: 0.92rem;
+      font-family: 'IBM Plex Mono', monospace;
+      color: #2f2a22;
+      max-height: 12em;
+      overflow: auto;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(4px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <h1>Email Worker UI</h1>
+    <p class="sub">Minimal GitHub Pages frontend for create + read email.</p>
+
+    <section class="panel">
+      <div class="grid">
+        <div>
+          <label for="apiBase">Worker API Base URL</label>
+          <input id="apiBase" placeholder="https://your-worker.workers.dev" />
+        </div>
+        <div>
+          <label for="address">Email Address</label>
+          <input id="address" placeholder="example@your-domain.com" />
+        </div>
+      </div>
+
+      <div class="actions">
+        <button id="createBtn">Create New Address</button>
+        <button id="fetchBtn" class="secondary">Fetch Latest Emails</button>
+      </div>
+
+      <div id="status" class="status">Ready.</div>
+      <div id="emails" class="emails"></div>
+    </section>
+  </main>
+
+  <script>
+    const els = {
+      apiBase: document.getElementById('apiBase'),
+      address: document.getElementById('address'),
+      createBtn: document.getElementById('createBtn'),
+      fetchBtn: document.getElementById('fetchBtn'),
+      status: document.getElementById('status'),
+      emails: document.getElementById('emails')
+    };
+
+    const savedBase = localStorage.getItem('apiBase') || '';
+    els.apiBase.value = savedBase;
+
+    function normalizeBase(raw) {
+      return raw.trim().replace(/\/$/, '');
+    }
+
+    function setStatus(text, isError) {
+      els.status.textContent = text;
+      els.status.classList.toggle('err', Boolean(isError));
+    }
+
+    function setBusy(busy) {
+      els.createBtn.disabled = busy;
+      els.fetchBtn.disabled = busy;
+    }
+
+    function getBase() {
+      const base = normalizeBase(els.apiBase.value);
+      if (!base) {
+        throw new Error('Please fill in Worker API Base URL first.');
+      }
+      localStorage.setItem('apiBase', base);
+      return base;
+    }
+
+    async function apiGet(path) {
+      const base = getBase();
+      const res = await fetch(base + path, { method: 'GET' });
+      let body = null;
+      try {
+        body = await res.json();
+      } catch (_) {
+        body = null;
+      }
+
+      if (!res.ok || !body || body.success === false) {
+        const msg = body && body.error ? body.error : ('Request failed: ' + res.status);
+        throw new Error(msg);
+      }
+
+      return body;
+    }
+
+    function clearEmails() {
+      els.emails.innerHTML = '';
+    }
+
+    function renderEmails(items) {
+      clearEmails();
+      if (!Array.isArray(items) || items.length === 0) {
+        setStatus('No emails found for this address.', false);
+        return;
+      }
+
+      const frag = document.createDocumentFragment();
+      for (const item of items) {
+        const card = document.createElement('article');
+        card.className = 'mail';
+
+        const title = document.createElement('h3');
+        title.textContent = item.subject || '(No subject)';
+
+        const meta = document.createElement('p');
+        meta.className = 'meta';
+        meta.textContent = 'From: ' + (item.from || '-') + ' | To: ' + (item.to || '-') + ' | ' + (item.createdAt || '-');
+
+        const text = document.createElement('p');
+        text.className = 'txt';
+        text.textContent = item.text || item.html || '(No content)';
+
+        card.appendChild(title);
+        card.appendChild(meta);
+        card.appendChild(text);
+        frag.appendChild(card);
+      }
+
+      els.emails.appendChild(frag);
+      setStatus('Loaded ' + items.length + ' emails.', false);
+    }
+
+    async function onCreateAddress() {
+      try {
+        setBusy(true);
+        setStatus('Creating address...', false);
+        const body = await apiGet('/email/create');
+        const addr = body && body.data ? body.data.address : '';
+        if (!addr) throw new Error('No address returned by API.');
+        els.address.value = addr;
+        clearEmails();
+        setStatus('Address created: ' + addr, false);
+      } catch (err) {
+        setStatus(err.message || String(err), true);
+      } finally {
+        setBusy(false);
+      }
+    }
+
+    async function onFetchEmails() {
+      try {
+        const addr = els.address.value.trim();
+        if (!addr) throw new Error('Please fill in email address first.');
+
+        setBusy(true);
+        setStatus('Fetching emails...', false);
+        const body = await apiGet('/email/' + encodeURIComponent(addr) + '?limit=10');
+        renderEmails(body.data || []);
+      } catch (err) {
+        clearEmails();
+        setStatus(err.message || String(err), true);
+      } finally {
+        setBusy(false);
+      }
+    }
+
+    els.createBtn.addEventListener('click', onCreateAddress);
+    els.fetchBtn.addEventListener('click', onFetchEmails);
+  </script>
+</body>
+</html>
