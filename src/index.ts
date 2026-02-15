@@ -482,9 +482,17 @@ export default {
         } catch (error) {
             console.error('Insert email error:', error.message);
         } finally {
-            const list = env.forward_address.split(';');
+            const list = (env.forward_address || '')
+                .split(';')
+                .map((address) => address.trim())
+                .filter(Boolean);
+
             for (const address of list) {
-                await message.forward(address);
+                try {
+                    await message.forward(address);
+                } catch (error: any) {
+                    console.error('Forward email error:', address, error?.message ?? error);
+                }
             }
         }
     },
