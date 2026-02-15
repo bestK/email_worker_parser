@@ -5,18 +5,19 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Email Inbox UI</title>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600&family=IBM+Plex+Mono:wght@400;500&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
 
     :root {
-      --bg-0: #f4efe3;
-      --bg-1: #efe7d8;
-      --ink: #1c1a15;
-      --ink-muted: #5c5648;
-      --line: #c8bfae;
-      --accent: #1f7a63;
-      --accent-2: #185f4e;
-      --card: #fffcf6;
-      --danger: #a1322d;
+      --bg: #fafafa;
+      --bg-grid: rgba(0, 0, 0, 0.035);
+      --ink: #111111;
+      --ink-muted: #666666;
+      --line: #e5e5e5;
+      --line-strong: #d4d4d4;
+      --panel: #ffffff;
+      --button: #111111;
+      --button-hover: #000000;
+      --danger: #b42318;
     }
 
     * {
@@ -26,39 +27,41 @@
     body {
       margin: 0;
       color: var(--ink);
-      font-family: 'Space Grotesk', sans-serif;
+      font-family: 'Plus Jakarta Sans', sans-serif;
       background:
-        radial-gradient(1200px 500px at 15% -10%, #fff6df 0%, transparent 70%),
-        radial-gradient(900px 500px at 100% 0%, #e9f4ee 0%, transparent 70%),
-        linear-gradient(160deg, var(--bg-0), var(--bg-1));
+        linear-gradient(var(--bg-grid) 1px, transparent 1px),
+        linear-gradient(90deg, var(--bg-grid) 1px, transparent 1px),
+        var(--bg);
+      background-size: 20px 20px, 20px 20px, auto;
       min-height: 100vh;
     }
 
     .shell {
-      max-width: 940px;
+      max-width: 880px;
       margin: 0 auto;
-      padding: 28px 18px 40px;
+      padding: 34px 18px 48px;
     }
 
     h1 {
       margin: 0;
-      font-size: clamp(1.6rem, 2vw + 1rem, 2.5rem);
-      letter-spacing: 0.01em;
+      font-size: clamp(1.5rem, 1.6vw + 1rem, 2.25rem);
+      letter-spacing: -0.02em;
+      font-weight: 700;
     }
 
     .sub {
-      margin: 8px 0 0;
+      margin: 10px 0 0;
       color: var(--ink-muted);
-      font-size: 0.98rem;
+      font-size: 0.95rem;
     }
 
     .panel {
-      margin-top: 18px;
-      background: color-mix(in srgb, var(--card) 90%, #ffffff);
+      margin-top: 20px;
+      background: var(--panel);
       border: 1px solid var(--line);
-      border-radius: 16px;
-      padding: 16px;
-      box-shadow: 0 14px 34px rgba(48, 43, 32, 0.08);
+      border-radius: 14px;
+      padding: 18px;
+      box-shadow: 0 8px 28px rgba(0, 0, 0, 0.06);
     }
 
     .grid {
@@ -74,16 +77,16 @@
     }
 
     details.advanced {
-      margin-top: 10px;
-      border: 1px dashed var(--line);
+      margin-top: 12px;
+      border: 1px solid var(--line);
       border-radius: 10px;
       padding: 8px 10px;
-      background: #faf6ee;
+      background: #fcfcfc;
     }
 
     details.advanced summary {
       cursor: pointer;
-      color: var(--ink-muted);
+      color: #4f4f4f;
       font-size: 0.9rem;
       user-select: none;
     }
@@ -95,7 +98,7 @@
     label {
       display: block;
       font-size: 0.86rem;
-      color: var(--ink-muted);
+      color: #505050;
       margin-bottom: 6px;
     }
 
@@ -104,16 +107,16 @@
       padding: 10px 11px;
       border: 1px solid var(--line);
       border-radius: 10px;
-      background: #fffdf7;
+      background: #ffffff;
       color: var(--ink);
       outline: none;
       font-size: 0.95rem;
-      transition: border-color 140ms ease, box-shadow 140ms ease;
+      transition: border-color 120ms ease, box-shadow 120ms ease;
     }
 
     input:focus {
-      border-color: var(--accent);
-      box-shadow: 0 0 0 3px rgba(31, 122, 99, 0.13);
+      border-color: var(--line-strong);
+      box-shadow: 0 0 0 3px rgba(17, 17, 17, 0.08);
     }
 
     .actions {
@@ -124,25 +127,26 @@
     }
 
     button {
-      border: 0;
+      border: 1px solid #000;
       border-radius: 10px;
       padding: 10px 14px;
       font-weight: 600;
-      font-family: 'Space Grotesk', sans-serif;
+      font-family: 'Plus Jakarta Sans', sans-serif;
       cursor: pointer;
-      background: var(--accent);
-      color: #f6fdf9;
-      transition: transform 120ms ease, background 120ms ease;
+      background: var(--button);
+      color: #fff;
+      transition: transform 120ms ease, background 120ms ease, border-color 120ms ease;
     }
 
     button:hover {
       transform: translateY(-1px);
-      background: var(--accent-2);
+      background: var(--button-hover);
     }
 
     button.secondary {
-      background: #ece5d6;
-      color: #29251f;
+      background: #fff;
+      color: #111;
+      border-color: var(--line-strong);
     }
 
     .status {
@@ -150,7 +154,7 @@
       padding: 10px 11px;
       border-radius: 10px;
       border: 1px solid var(--line);
-      background: #faf6ee;
+      background: #fcfcfc;
       color: var(--ink-muted);
       font-size: 0.92rem;
       min-height: 42px;
@@ -160,8 +164,8 @@
 
     .status.err {
       color: var(--danger);
-      border-color: #d7aaa7;
-      background: #fff4f3;
+      border-color: #efc7c3;
+      background: #fff8f7;
     }
 
     .emails {
@@ -172,7 +176,7 @@
 
     .mail {
       border: 1px solid var(--line);
-      background: #fffdf8;
+      background: #fff;
       border-radius: 12px;
       padding: 12px;
       animation: fadeIn 260ms ease;
@@ -196,7 +200,7 @@
       line-height: 1.45;
       font-size: 0.92rem;
       font-family: 'IBM Plex Mono', monospace;
-      color: #2f2a22;
+      color: #1f1f1f;
       max-height: 12em;
       overflow: auto;
     }
