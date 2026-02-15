@@ -45,7 +45,7 @@ function firstString(value: unknown): string | undefined {
     return undefined;
 }
 
-const DEFAULT_UI_URL = 'https://bestk.github.io/email_worker_parser/';
+const DEFAULT_UI_URL = 'https://bestk.github.io/sample-mail/';
 
 function getUiUrl(env: Env): string {
     return env.GHPAGE || env.UI_URL || DEFAULT_UI_URL;
@@ -139,7 +139,7 @@ function matchRoute(method: string, url: string): { handler: Handler, params: Re
 // --- 路由处理逻辑 ---
 
 // 创建 Email 地址（不再按地址动态创建 Cloudflare Email Routing 规则）
-// 前置要求：Cloudflare 邮件路由中需有一条兜底规则把邮件交给本 Worker（例如 *@EMAIL_DOMAIN -> email_worker_parser）
+// 前置要求：Cloudflare 邮件路由中需有一条兜底规则把邮件交给本 Worker（例如 *@EMAIL_DOMAIN -> sample-mail）
 register('GET', '/email/create', async (request, env, ctx, params) => {
     const domain = (env.EMAIL_DOMAIN || '').trim();
     if (!domain) {

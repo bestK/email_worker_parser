@@ -1,80 +1,98 @@
-# email_worker_parser
+# sample-mail
 
-# 
-``` shell
+Cloudflare Email Worker + D1 + GitHub Pages frontend.
 
-wrangler d1 create <name>       Create D1 database
+![Sample Mail UI](docs/screenshot.svg)
 
-wrangler d1 execute --file ./sql/schema.sql
+## Features
+
+- Generate random inbox addresses via `/email/create`
+- Receive emails through Cloudflare Email Routing and store them in D1
+- Read inbox messages via `/email/:address?limit=10`
+- Serve frontend from `GHPAGE` URL directly through Worker (`/` and `/ui`)
+- Auto refresh inbox in frontend every 3 seconds
+
+## Quick Start
+
+1) Install dependencies
+
+```bash
+npm install
 ```
 
-### change wrangler.toml
+2) Create D1 and initialize schema
+
+```bash
+wrangler d1 create <db_name>
+wrangler d1 execute <db_name> --file ./sql/schema.sql
 ```
+
+3) Configure `wrangler.toml`
+
+```toml
+name = "sample-mail"
+main = "src/index.ts"
+compatibility_date = "2024-06-06"
+
 [[d1_databases]]
-binding = "DB" # i.e. available in your Worker on env.DB
-database_name = "cf_email_xxx"
-database_id = "202c0469-b860-4993-ba42-xxxxx"
+binding = "DB"
+database_name = "<db_name>"
+database_id = "<your_database_id>"
 
 [vars]
-forward_address = "xxx@email.com;yyy@email.com"
-CLOUDFLARE_EMAIL = ""
-CLOUDFLARE_API_KEY = ""
-ZONE_ID = ""
-ACCOUNT_ID = ""
-EMAIL_DOMAIN = ""
-GHPAGE = "https://<your-github-username>.github.io/email_worker_parser/"
-UI_URL = "https://<your-github-username>.github.io/email_worker_parser/" # optional fallback
+EMAIL_DOMAIN = "example.com"
+forward_address = "a@example.com;b@example.com"
+GHPAGE = "https://<your-github-username>.github.io/sample-mail/"
 ```
 
-### GitHub Pages frontend
-This repo now includes a minimal static frontend at `docs/index.html`.
+4) Deploy worker
 
-1. Push code to GitHub.
-2. In GitHub repo settings, enable Pages from branch `main` and folder `/docs`.
-3. Set `GHPAGE` in your Worker vars to your Pages URL, then redeploy.
-
-```
-wrangler deploy
+```bash
+npm run deploy
 ```
 
+## Email Routing
+
+Set a catch-all rule in Cloudflare Email Routing to this Worker, for example:
+
+- `*@EMAIL_DOMAIN -> sample-mail`
+
+Without this rule, emails will not be delivered to the Worker.
+
+## API
+
+Create inbox:
+
+```http
+GET /email/create
 ```
-# create a new email address
-get https://yourname.workers.dev/email/create
 
-# NOTE:
-# /email/create 现在仅生成随机地址，不再动态调用 Cloudflare API 创建 routing rule。
-# 需要你在 Cloudflare Email Routing 里预先配置兜底规则（如 *@EMAIL_DOMAIN -> email_worker_parser）。
+Response example:
 
+```json
 {
-    "success": true,
-    "data": {
-        "fetch_endpoint": "/email/v75pwnekqwisy3efdlk3tq@example.com",
-        "address": "v75pwnekqwisy3efdlk3tq@example.com"
-    }
+  "success": true,
+  "data": {
+    "fetch_endpoint": "/email/abc123@example.com",
+    "address": "abc123@example.com",
+    "mode": "catch_all_worker_rule"
+  }
 }
-
-# get email list
-get https://yourname.workers.dev/email/{address}?limit=5
-
-{
-    "data": [
-        {
-            "id": 2,
-            "subject": "Re: hi",
-            "from": "xxxx",
-            "to": "xxx",
-            "html": null,
-            "text": null,
-            "createdAt": "2024-06-26 06:01:05",
-        } 
- 
-    ],
-    "success": true
-}
-
 ```
 
-### Usage
+Get messages:
+
+```http
+GET /email/{address}?limit=10
 ```
-"text": "发件人: \"Cursor\" <no-reply@cursor.sh&gt;;\r\n发送时间:&nbsp;2025年4月8日(星期二) 上午9:49\r\n收件人:&nbsp;\"yeo8\"<yeo8@example.com&gt;;\r\n\r\n主题:&nbsp;Sign in to Cursor\r\n\r\n\r\n\r\n Your one-time code is 340325. This code expires in 10 minutes. If you didn’t request to sign in to Cursor, you can safely ignore this email.\r\n \r\n\r\n\r\n\r\n\r\n\r\n\r\nSign in to Cursor\r\n\r\n \r\n\r\nYou requested to sign in to Cursor. Your one-time code is:\r\n\r\n \r\n\r\n340325\r\n\r\n \r\n\r\n\r\n\r\n\r\n \r\n\r\nThis code expires in 10 minutes.\r\n\r\n \r\n\r\nIf you didn’t request to sign in to Cursor, you can safely ignore this email. Someone else might have typed your email address by mistake.",
-```
+
+## Frontend (GitHub Pages)
+
+- Frontend source is `docs/index.html`
+- Workflow deploys `docs/` to `gh-pages` automatically
+- Worker reads `GHPAGE` and returns that UI from `/` and `/ui`
+
+## Notes
+
+- If `EMAIL_DOMAIN` is missing, `/email/create` returns a config error
+- `forward_address` can be empty; use `;` to separate multiple emails

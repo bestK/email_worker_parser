@@ -1,5 +1,5 @@
 {
-    "name": "email_worker_parser",
+    "name": "sample-mail",
     "version": "0.0.0",
     "devDependencies": {
         "wrangler": "^3.61.0"

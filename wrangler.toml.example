@@ -1,4 +1,4 @@
-name = "email_worker_parser"
+name = "sample-mail"
 main = "src/index.ts"
 compatibility_date = "2024-06-06" 
 
@@ -14,5 +14,5 @@ CLOUDFLARE_API_KEY = ""
 ZONE_ID = ""
 ACCOUNT_ID = ""
 EMAIL_DOMAIN = ""
-GHPAGE = "https://<your-github-username>.github.io/email_worker_parser/"
-UI_URL = "https://<your-github-username>.github.io/email_worker_parser/"
+GHPAGE = "https://<your-github-username>.github.io/sample-mail/"
+UI_URL = "https://<your-github-username>.github.io/sample-mail/"
