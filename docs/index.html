@@ -260,6 +260,7 @@
     const POLL_INTERVAL_MS = 3000;
     let pollingTimer = null;
     let autoFetching = false;
+    let lastRenderedSignature = null;
 
     const defaultBase = window.location.origin;
     const savedBase = localStorage.getItem('apiBase') || defaultBase;
@@ -307,7 +308,15 @@
       els.emails.innerHTML = '';
     }
 
+    function buildSignature(items) {
+      if (!Array.isArray(items)) return '[]';
+      return items
+        .map((item) => [item.createdAt, item.subject, item.from, item.to].join('|'))
+        .join('||');
+    }
+
     function renderEmails(items) {
+      lastRenderedSignature = buildSignature(items);
       clearEmails();
       if (!Array.isArray(items) || items.length === 0) {
         setStatus('No mail yet for this inbox.', false);
@@ -348,6 +357,7 @@
         const addr = body && body.data ? body.data.address : '';
         if (!addr) throw new Error('No address returned by API.');
         els.address.value = addr;
+        lastRenderedSignature = null;
         clearEmails();
         setStatus('New inbox is ready: ' + addr, false);
       } catch (err) {
@@ -384,8 +394,11 @@
         try {
           autoFetching = true;
           const body = await apiGet('/email/' + encodeURIComponent(addr) + '?limit=10');
-          renderEmails(body.data || []);
-          setStatus('Auto-checking every 3 seconds.', false);
+          const items = body.data || [];
+          const nextSignature = buildSignature(items);
+          if (nextSignature !== lastRenderedSignature) {
+            renderEmails(items);
+          }
         } catch (err) {
           setStatus(err.message || String(err), true);
         } finally {
