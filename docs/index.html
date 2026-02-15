@@ -242,7 +242,7 @@
         <button id="fetchBtn" class="secondary">Check New Mail</button>
       </div>
 
-      <div id="status" class="status">Ready to receive mail.</div>
+      <div id="status" class="status">Inbox is ready.</div>
       <div id="emails" class="emails"></div>
     </section>
   </main>
@@ -310,7 +310,7 @@
     function renderEmails(items) {
       clearEmails();
       if (!Array.isArray(items) || items.length === 0) {
-        setStatus('No emails found for this address.', false);
+        setStatus('No mail yet for this inbox.', false);
         return;
       }
 
@@ -337,19 +337,19 @@
       }
 
       els.emails.appendChild(frag);
-      setStatus('Loaded ' + items.length + ' emails.', false);
+      setStatus('Showing ' + items.length + ' messages.', false);
     }
 
     async function onCreateAddress() {
       try {
         setBusy(true);
-        setStatus('Creating address...', false);
+        setStatus('Creating a new inbox...', false);
         const body = await apiGet('/email/create');
         const addr = body && body.data ? body.data.address : '';
         if (!addr) throw new Error('No address returned by API.');
         els.address.value = addr;
         clearEmails();
-        setStatus('Address created: ' + addr, false);
+        setStatus('New inbox is ready: ' + addr, false);
       } catch (err) {
         setStatus(err.message || String(err), true);
       } finally {
@@ -363,7 +363,7 @@
         if (!addr) throw new Error('Please fill in email address first.');
 
         setBusy(true);
-        setStatus('Fetching emails...', false);
+        setStatus('Checking for new mail...', false);
         const body = await apiGet('/email/' + encodeURIComponent(addr) + '?limit=10');
         renderEmails(body.data || []);
       } catch (err) {
@@ -385,7 +385,7 @@
           autoFetching = true;
           const body = await apiGet('/email/' + encodeURIComponent(addr) + '?limit=10');
           renderEmails(body.data || []);
-          setStatus('Auto refreshed every 3s.', false);
+          setStatus('Auto-checking every 3 seconds.', false);
         } catch (err) {
           setStatus(err.message || String(err), true);
         } finally {
