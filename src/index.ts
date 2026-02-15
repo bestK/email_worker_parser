@@ -468,13 +468,18 @@ export default {
             const parser = new PostalMime();
             const parsedEmail: Email = await parser.parse(rawEmail);
 
+            const msgTo: any = (message as any).to;
+            const msgFrom: any = (message as any).from;
+            const envelopeTo = (Array.isArray(msgTo) ? msgTo[0] : msgTo) || parsedEmail.to?.[0]?.address || 'None';
+            const envelopeFrom = (Array.isArray(msgFrom) ? msgFrom[0] : msgFrom) || parsedEmail.from?.address;
+
             await env.DB.prepare(
                 `INSERT INTO Email ("subject", "from", "to", "html", "text") VALUES (?, ?, ?, ?, ?)`
             )
                 .bind(
                     parsedEmail.subject ?? 'None',
-                    parsedEmail.from?.address,
-                    parsedEmail.to[0]?.address ?? 'None',
+                    envelopeFrom,
+                    envelopeTo,
                     parsedEmail.html,
                     parsedEmail.text
                 )
