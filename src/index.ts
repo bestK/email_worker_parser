@@ -1,24 +1,41 @@
 import PostalMime, { Email } from 'postal-mime';
 import { parsers } from './parser/index.js';
-import { EmailMessage } from "cloudflare:email";
-
-interface Event {
-    raw: ReadableStream;
-    rawSize: number;
-    forward: (email: string) => Promise<void>;
-}
+import { EmailMessage } from 'cloudflare:email';
 
 export interface Env {
     DB: D1Database;
     forward_address: string;
-    CLOUDFLARE_EMAIL: string;
-    CLOUDFLARE_API_KEY: string;
-    ZONE_ID: string;
-    ACCOUNT_ID: string;
     EMAIL_DOMAIN: string;
 }
 
 interface Ctx { }
+
+function jsonResponse(body: unknown, init?: ResponseInit): Response {
+    return new Response(JSON.stringify(body), {
+        ...init,
+        headers: {
+            'content-type': 'application/json',
+            ...(init?.headers ?? {}),
+        },
+    });
+}
+
+function parseLimit(raw: string | null, defaultValue = 10, min = 1, max = 50): number {
+    if (!raw) return defaultValue;
+    const n = Number.parseInt(raw, 10);
+    if (!Number.isFinite(n)) return defaultValue;
+    return Math.min(max, Math.max(min, n));
+}
+
+function firstString(value: unknown): string | undefined {
+    if (typeof value === 'string' && value) return value;
+    if (Array.isArray(value)) {
+        for (const v of value) {
+            if (typeof v === 'string' && v) return v;
+        }
+    }
+    return undefined;
+}
 
 async function streamToArrayBuffer(stream: ReadableStream, streamSize: number): Promise<Uint8Array> {
     const result = new Uint8Array(streamSize);
@@ -76,14 +93,14 @@ register('GET', '/email/create', async (request, env, ctx, params) => {
         + Math.random().toString(36).substring(2, 15)
         + '@' + env.EMAIL_DOMAIN;
 
-    return new Response(JSON.stringify({
+    return jsonResponse({
         success: true,
         data: {
             fetch_endpoint: `/email/${randomEmail}`,
             address: randomEmail,
-            mode: 'catch_all_worker_rule'
-        }
-    }), { headers: { 'content-type': 'application/json' } });
+            mode: 'catch_all_worker_rule',
+        },
+    });
 });
 
 // email/:address 路由处理
@@ -95,41 +112,32 @@ register('GET', '/email/:address', async (request, env, ctx, params) => {
     const limit = url.searchParams.get('limit');
     const parserName = url.searchParams.get('parser');
 
-    // 默认情况下限制结果数量
-    const maxResults = limit ? parseInt(limit, 10) : 10; // 默认10条记录
+    const maxResults = parseLimit(limit);
     const parser = parserName ? parsers[parserName] : null;
 
     try {
         const { results, success, meta } = await env.DB
-            .prepare('SELECT "subject", "from", "to", "html", "text", "createdAt" FROM Email WHERE "to" = ? ORDER BY createdAt DESC LIMIT ?')
-            .bind(address, maxResults) // 绑定 address 和 limit
+            .prepare('SELECT "subject", "from", "to", "html", "text", "createdAt" FROM Email WHERE lower("to") = lower(?) ORDER BY createdAt DESC LIMIT ?')
+            .bind(address, maxResults)
             .run();
 
         if (success) {
             // 如果存在解析器，解析邮件内容
             if (parser) {
                 results.forEach((item) => {
-                    const code = parser(item.text);
+                    const code = parser(item.text ?? '');
                     item['parsed_code'] = code;
                 });
             }
 
-            return new Response(JSON.stringify({ success: true, data: results }), {
-                headers: { 'content-type': 'application/json' },
-            });
+            return jsonResponse({ success: true, data: results });
         } else {
             console.error("D1 query failed:", meta);
-            return new Response(JSON.stringify({ success: false, error: 'Failed to retrieve emails' }), {
-                status: 500,
-                headers: { 'content-type': 'application/json' },
-            });
+            return jsonResponse({ success: false, error: 'Failed to retrieve emails' }, { status: 500 });
         }
     } catch (e: any) {
         console.error("Error fetching from D1:", e);
-        return new Response(JSON.stringify({ success: false, error: 'Query error', details: e.message }), {
-            status: 500,
-            headers: { 'content-type': 'application/json' },
-        });
+        return jsonResponse({ success: false, error: 'Query error', details: e.message }, { status: 500 });
     }
 });
 
@@ -190,7 +198,7 @@ register('GET', '/help', async (request, env, ctx, params) => {
             <h2>Example Usage:</h2>
             <pre>
 GET /email/create
-POST /email/:address?limit=5&parser=exampleParser
+GET /email/:address?limit=5&parser=exampleParser
             </pre>
             <p>For more information, feel free to contact support.</p>
             <!-- 返回 ui 页面 -->
@@ -468,10 +476,10 @@ export default {
             const parser = new PostalMime();
             const parsedEmail: Email = await parser.parse(rawEmail);
 
-            const msgTo: any = (message as any).to;
-            const msgFrom: any = (message as any).from;
-            const envelopeTo = (Array.isArray(msgTo) ? msgTo[0] : msgTo) || parsedEmail.to?.[0]?.address || 'None';
-            const envelopeFrom = (Array.isArray(msgFrom) ? msgFrom[0] : msgFrom) || parsedEmail.from?.address || 'None';
+            const msgTo = firstString((message as any).to);
+            const msgFrom = firstString((message as any).from);
+            const envelopeTo = msgTo || parsedEmail.to?.[0]?.address || 'None';
+            const envelopeFrom = msgFrom || parsedEmail.from?.address || 'None';
 
             // D1 does not accept `undefined` bind values
             const html = parsedEmail.html ?? null;
