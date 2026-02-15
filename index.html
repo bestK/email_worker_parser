@@ -1,0 +1,595 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Email Inbox UI</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
+
+    :root {
+      --bg: #fafafa;
+      --bg-grid: rgba(0, 0, 0, 0.035);
+      --ink: #111111;
+      --ink-muted: #666666;
+      --line: #e5e5e5;
+      --line-strong: #d4d4d4;
+      --panel: #ffffff;
+      --button: #111111;
+      --button-hover: #000000;
+      --danger: #b42318;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      color: var(--ink);
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background:
+        linear-gradient(var(--bg-grid) 1px, transparent 1px),
+        linear-gradient(90deg, var(--bg-grid) 1px, transparent 1px),
+        var(--bg);
+      background-size: 20px 20px, 20px 20px, auto;
+      min-height: 100vh;
+    }
+
+    .shell {
+      max-width: 880px;
+      margin: 0 auto;
+      padding: 34px 18px 48px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(1.5rem, 1.6vw + 1rem, 2.25rem);
+      letter-spacing: -0.02em;
+      font-weight: 700;
+    }
+
+    .sub {
+      margin: 10px 0 0;
+      color: var(--ink-muted);
+      font-size: 0.95rem;
+    }
+
+    .panel {
+      margin-top: 20px;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 18px;
+      box-shadow: 0 8px 28px rgba(0, 0, 0, 0.06);
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+    }
+
+    @media (min-width: 860px) {
+      .grid {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    details.advanced {
+      margin-top: 12px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 8px 10px;
+      background: #fcfcfc;
+    }
+
+    details.advanced summary {
+      cursor: pointer;
+      color: #4f4f4f;
+      font-size: 0.9rem;
+      user-select: none;
+    }
+
+    details.advanced .inner {
+      margin-top: 10px;
+    }
+
+    label {
+      display: block;
+      font-size: 0.86rem;
+      color: #505050;
+      margin-bottom: 6px;
+    }
+
+    input {
+      width: 100%;
+      padding: 10px 11px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: #ffffff;
+      color: var(--ink);
+      outline: none;
+      font-size: 0.95rem;
+      transition: border-color 120ms ease, box-shadow 120ms ease;
+    }
+
+    input:focus {
+      border-color: var(--line-strong);
+      box-shadow: 0 0 0 3px rgba(17, 17, 17, 0.08);
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    button {
+      border: 1px solid #000;
+      border-radius: 10px;
+      padding: 10px 14px;
+      font-weight: 600;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      cursor: pointer;
+      background: var(--button);
+      color: #fff;
+      transition: transform 120ms ease, background 120ms ease, border-color 120ms ease;
+    }
+
+    button:hover {
+      transform: translateY(-1px);
+      background: var(--button-hover);
+    }
+
+    button.secondary {
+      background: #fff;
+      color: #111;
+      border-color: var(--line-strong);
+    }
+
+    .status {
+      margin-top: 12px;
+      padding: 10px 11px;
+      border-radius: 10px;
+      border: 1px solid var(--line);
+      background: #fcfcfc;
+      color: var(--ink-muted);
+      font-size: 0.92rem;
+      min-height: 42px;
+      display: flex;
+      align-items: center;
+    }
+
+    .status.err {
+      color: var(--danger);
+      border-color: #efc7c3;
+      background: #fff8f7;
+    }
+
+    .emails {
+      margin-top: 16px;
+      display: grid;
+      gap: 10px;
+    }
+
+    .sponsor {
+      margin-top: 14px;
+      margin-bottom: 10px;
+      border-top: 1px dashed var(--line);
+      padding-top: 10px;
+    }
+
+    .sponsor-mark {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 8px;
+      color: #6b6b6b;
+      font-size: 0.74rem;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .sponsor-mark svg {
+      width: 14px;
+      height: 14px;
+      display: block;
+      stroke: #7a7a7a;
+    }
+
+    .sponsor-list {
+      display: grid;
+      gap: 8px;
+    }
+
+    .sponsor-item {
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: #fff;
+      padding: 9px;
+      animation: fadeIn 260ms ease;
+    }
+
+    .sponsor-item .row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .sponsor-item .name {
+      font-size: 0.74rem;
+      color: #7a7a7a;
+      margin: 0;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      font-weight: 500;
+    }
+
+    .sponsor-item .hash {
+      margin: 7px 0 0;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.8rem;
+      line-height: 1.45;
+      word-break: break-all;
+      background: #fcfcfc;
+      border: 1px solid #ededed;
+      border-radius: 8px;
+      padding: 7px;
+      color: #404040;
+    }
+
+    .copy-btn {
+      border: 1px solid #e1e1e1;
+      border-radius: 8px;
+      background: #fff;
+      color: #5f5f5f;
+      padding: 6px 9px;
+      font-size: 0.72rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: transform 120ms ease, background 120ms ease;
+      white-space: nowrap;
+    }
+
+    .copy-btn:hover {
+      transform: translateY(-1px);
+      background: #f8f8f8;
+    }
+
+    .sponsor-empty {
+      margin: 0;
+      color: #777;
+      font-size: 0.8rem;
+      border: 1px dashed #e8e8e8;
+      border-radius: 10px;
+      background: #fcfcfc;
+      padding: 8px;
+    }
+
+    .mail {
+      border: 1px solid var(--line);
+      background: #fff;
+      border-radius: 12px;
+      padding: 12px;
+      animation: fadeIn 260ms ease;
+    }
+
+    .mail h3 {
+      margin: 0 0 6px;
+      font-size: 1rem;
+      line-height: 1.4;
+    }
+
+    .meta {
+      margin: 0;
+      color: var(--ink-muted);
+      font-size: 0.85rem;
+    }
+
+    .txt {
+      margin: 8px 0 0;
+      white-space: pre-wrap;
+      line-height: 1.45;
+      font-size: 0.92rem;
+      font-family: 'IBM Plex Mono', monospace;
+      color: #1f1f1f;
+      max-height: 12em;
+      overflow: auto;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(4px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <h1>Email Inbox UI</h1>
+    <p class="sub">Minimal frontend for create + read email.</p>
+
+    <section class="panel">
+      <div>
+        <div>
+          <label for="address">Email Address</label>
+          <input id="address" placeholder="example@your-domain.com" />
+        </div>
+      </div>
+
+      <details class="advanced">
+        <summary>Advanced: API Base URL</summary>
+        <div class="inner">
+          <input id="apiBase" placeholder="https://your-api.example.com" />
+        </div>
+      </details>
+
+      <div class="actions">
+        <button id="createBtn">Generate Inbox</button>
+        <button id="fetchBtn" class="secondary">Check New Mail</button>
+      </div>
+
+      <div id="status" class="status">Inbox is ready.</div>
+      <div id="emails" class="emails"></div>
+
+      <section class="sponsor">
+        <div class="sponsor-mark" aria-label="sponsor">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M4 8h12v5a4 4 0 0 1-4 4H8a4 4 0 0 1-4-4V8z"></path>
+            <path d="M16 10h2a2 2 0 1 1 0 4h-2"></path>
+            <path d="M7 5c0-1 1-2 2-2"></path>
+            <path d="M11 5c0-1 1-2 2-2"></path>
+          </svg>
+          Sponsor
+        </div>
+        <div id="sponsorList" class="sponsor-list"></div>
+      </section>
+    </section>
+  </main>
+
+  <script>
+    const els = {
+      apiBase: document.getElementById('apiBase'),
+      address: document.getElementById('address'),
+      createBtn: document.getElementById('createBtn'),
+      fetchBtn: document.getElementById('fetchBtn'),
+      status: document.getElementById('status'),
+      emails: document.getElementById('emails'),
+      sponsorList: document.getElementById('sponsorList')
+    };
+
+    const POLL_INTERVAL_MS = 3000;
+    let pollingTimer = null;
+    let autoFetching = false;
+    let lastRenderedSignature = null;
+
+    const defaultBase = window.location.origin;
+    const savedBase = localStorage.getItem('apiBase') || defaultBase;
+    els.apiBase.value = savedBase;
+
+    function normalizeBase(raw) {
+      return raw.trim().replace(/\/$/, '');
+    }
+
+    function setStatus(text, isError) {
+      els.status.textContent = text;
+      els.status.classList.toggle('err', Boolean(isError));
+    }
+
+    function setBusy(busy) {
+      els.createBtn.disabled = busy;
+      els.fetchBtn.disabled = busy;
+    }
+
+    function getBase() {
+      const base = normalizeBase(els.apiBase.value || defaultBase);
+      localStorage.setItem('apiBase', base);
+      return base;
+    }
+
+    async function apiGet(path) {
+      const base = getBase();
+      const res = await fetch(base + path, { method: 'GET' });
+      let body = null;
+      try {
+        body = await res.json();
+      } catch (_) {
+        body = null;
+      }
+
+      if (!res.ok || !body || body.success === false) {
+        const msg = body && body.error ? body.error : ('Request failed: ' + res.status);
+        throw new Error(msg);
+      }
+
+      return body;
+    }
+
+    function clearEmails() {
+      els.emails.innerHTML = '';
+    }
+
+    function renderSponsorChannels(channels) {
+      els.sponsorList.innerHTML = '';
+
+      if (!Array.isArray(channels) || channels.length === 0) {
+        const empty = document.createElement('p');
+        empty.className = 'sponsor-empty';
+        empty.textContent = 'No sponsor channel configured.';
+        els.sponsorList.appendChild(empty);
+        return;
+      }
+
+      const frag = document.createDocumentFragment();
+      for (const channel of channels) {
+        const card = document.createElement('article');
+        card.className = 'sponsor-item';
+
+        const name = document.createElement('p');
+        name.className = 'name';
+        name.textContent = channel.name || (channel.currency ? channel.currency + ' Transfer' : 'Sponsor Channel');
+
+        const copyBtn = document.createElement('button');
+        copyBtn.className = 'copy-btn';
+        copyBtn.type = 'button';
+        copyBtn.textContent = 'Copy Address';
+
+        copyBtn.addEventListener('click', async () => {
+          const value = channel.receive_hash || '';
+          if (!value) return;
+          try {
+            await navigator.clipboard.writeText(value);
+            copyBtn.textContent = 'Copied';
+            setTimeout(() => {
+              copyBtn.textContent = 'Copy Address';
+            }, 1200);
+          } catch (_) {
+            copyBtn.textContent = 'Copy Failed';
+            setTimeout(() => {
+              copyBtn.textContent = 'Copy Address';
+            }, 1200);
+          }
+        });
+
+        const hash = document.createElement('p');
+        hash.className = 'hash';
+        hash.textContent = channel.receive_hash || '-';
+
+        const row = document.createElement('div');
+        row.className = 'row';
+        row.appendChild(name);
+        row.appendChild(copyBtn);
+
+        card.appendChild(row);
+        card.appendChild(hash);
+        frag.appendChild(card);
+      }
+
+      els.sponsorList.appendChild(frag);
+    }
+
+    async function loadSponsorInfo() {
+      try {
+        const body = await apiGet('/sponsor/info');
+        const channels = body && body.data ? body.data.channels : [];
+        renderSponsorChannels(channels || []);
+      } catch (_) {
+        renderSponsorChannels([]);
+      }
+    }
+
+    function buildSignature(items) {
+      if (!Array.isArray(items)) return '[]';
+      return items
+        .map((item) => [item.createdAt, item.subject, item.from, item.to].join('|'))
+        .join('||');
+    }
+
+    function renderEmails(items) {
+      lastRenderedSignature = buildSignature(items);
+      clearEmails();
+      if (!Array.isArray(items) || items.length === 0) {
+        setStatus('No mail yet for this inbox.', false);
+        return;
+      }
+
+      const frag = document.createDocumentFragment();
+      for (const item of items) {
+        const card = document.createElement('article');
+        card.className = 'mail';
+
+        const title = document.createElement('h3');
+        title.textContent = item.subject || '(No subject)';
+
+        const meta = document.createElement('p');
+        meta.className = 'meta';
+        meta.textContent = 'From: ' + (item.from || '-') + ' | To: ' + (item.to || '-') + ' | ' + (item.createdAt || '-');
+
+        const text = document.createElement('p');
+        text.className = 'txt';
+        text.textContent = item.text || item.html || '(No content)';
+
+        card.appendChild(title);
+        card.appendChild(meta);
+        card.appendChild(text);
+        frag.appendChild(card);
+      }
+
+      els.emails.appendChild(frag);
+      setStatus('Showing ' + items.length + ' messages.', false);
+    }
+
+    async function onCreateAddress() {
+      try {
+        setBusy(true);
+        setStatus('Creating a new inbox...', false);
+        const body = await apiGet('/email/create');
+        const addr = body && body.data ? body.data.address : '';
+        if (!addr) throw new Error('No address returned by API.');
+        els.address.value = addr;
+        lastRenderedSignature = null;
+        clearEmails();
+        setStatus('New inbox is ready: ' + addr, false);
+      } catch (err) {
+        setStatus(err.message || String(err), true);
+      } finally {
+        setBusy(false);
+      }
+    }
+
+    async function onFetchEmails() {
+      try {
+        const addr = els.address.value.trim();
+        if (!addr) throw new Error('Please fill in email address first.');
+
+        setBusy(true);
+        setStatus('Checking for new mail...', false);
+        const body = await apiGet('/email/' + encodeURIComponent(addr) + '?limit=10');
+        renderEmails(body.data || []);
+      } catch (err) {
+        clearEmails();
+        setStatus(err.message || String(err), true);
+      } finally {
+        setBusy(false);
+      }
+    }
+
+    function startAutoPolling() {
+      if (pollingTimer) return;
+
+      pollingTimer = setInterval(async () => {
+        const addr = els.address.value.trim();
+        if (!addr || autoFetching) return;
+
+        try {
+          autoFetching = true;
+          const body = await apiGet('/email/' + encodeURIComponent(addr) + '?limit=10');
+          const items = body.data || [];
+          const nextSignature = buildSignature(items);
+          if (nextSignature !== lastRenderedSignature) {
+            renderEmails(items);
+          }
+        } catch (err) {
+          setStatus(err.message || String(err), true);
+        } finally {
+          autoFetching = false;
+        }
+      }, POLL_INTERVAL_MS);
+    }
+
+    els.createBtn.addEventListener('click', onCreateAddress);
+    els.fetchBtn.addEventListener('click', onFetchEmails);
+    els.apiBase.addEventListener('change', loadSponsorInfo);
+    startAutoPolling();
+    loadSponsorInfo();
+  </script>
+</body>
+</html>
