@@ -1,10 +1,11 @@
-import PostalMime, { Email } from 'postal-mime';
+import * as PostalMimeMod from './vendor/postal-mime-node.js';
 import { EmailMessage } from 'cloudflare:email';
 
 export interface Env {
     DB: D1Database;
     forward_address: string;
     EMAIL_DOMAIN: string;
+    GHPAGE?: string;
     UI_URL?: string;
 }
 
@@ -47,7 +48,26 @@ function firstString(value: unknown): string | undefined {
 const DEFAULT_UI_URL = 'https://bestk.github.io/email_worker_parser/';
 
 function getUiUrl(env: Env): string {
-    return env.UI_URL || DEFAULT_UI_URL;
+    return env.GHPAGE || env.UI_URL || DEFAULT_UI_URL;
+}
+
+async function serveUiFromUrl(env: Env): Promise<Response> {
+    const uiUrl = getUiUrl(env);
+
+    try {
+        const upstream = await fetch(uiUrl);
+        const headers = new Headers(upstream.headers);
+        return new Response(upstream.body, {
+            status: upstream.status,
+            statusText: upstream.statusText,
+            headers,
+        });
+    } catch (error: any) {
+        return new Response(
+            JSON.stringify({ success: false, error: 'Failed to load UI', details: error?.message ?? String(error) }),
+            { status: 502, headers: { 'content-type': 'application/json', ...CORS_HEADERS } }
+        );
+    }
 }
 
 async function streamToArrayBuffer(stream: ReadableStream, streamSize: number): Promise<Uint8Array> {
@@ -62,6 +82,8 @@ async function streamToArrayBuffer(stream: ReadableStream, streamSize: number): 
     }
     return result;
 }
+
+const PostalMimeCtor: any = (PostalMimeMod as any).default || (PostalMimeMod as any);
 
 // --- 简易路由系统 ---
 type Handler = (request: Request, env: Env, ctx: Ctx, params: Record<string, string>) => Promise<Response>;
@@ -146,7 +168,6 @@ register('GET', '/email/:address', async (request, env, ctx, params) => {
 
 // help
 register('GET', '/help', async (request, env, ctx, params) => {
-    const uiUrl = getUiUrl(env);
     // 返回帮助信息 html
     const html = `
 <!DOCTYPE html>
@@ -205,7 +226,7 @@ GET /email/:address?limit=5
             </pre>
             <p>For more information, feel free to contact support.</p>
             <!-- 返回 ui 页面 -->
-            <a href="${uiUrl}">UI</a>
+            <a href="/ui">UI</a>
         </body>
         </html>
     `;
@@ -217,16 +238,14 @@ GET /email/:address?limit=5
 
 // ui
 register('GET', '/ui', async (request, env, ctx, params) => {
-    const uiUrl = getUiUrl(env);
-    return Response.redirect(uiUrl);
+    return serveUiFromUrl(env);
 });
 
 
 
 // index
 register('GET', '/', async (request, env, ctx, params) => {
-    const uiUrl = getUiUrl(env);
-    return Response.redirect(uiUrl);
+    return serveUiFromUrl(env);
 });
 
 
@@ -250,8 +269,8 @@ export default {
     async email(message: EmailMessage, env: Env, ctx: Ctx): Promise<void> {
         try {
             const rawEmail = await streamToArrayBuffer(message.raw, message.rawSize);
-            const parser = new PostalMime();
-            const parsedEmail: Email = await parser.parse(rawEmail);
+            const parser = new PostalMimeCtor();
+            const parsedEmail: any = await parser.parse(rawEmail);
 
             const msgTo = firstString((message as any).to);
             const msgFrom = firstString((message as any).from);

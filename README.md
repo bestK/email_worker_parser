@@ -22,7 +22,8 @@ CLOUDFLARE_API_KEY = ""
 ZONE_ID = ""
 ACCOUNT_ID = ""
 EMAIL_DOMAIN = ""
-UI_URL = "https://<your-github-username>.github.io/email_worker_parser/"
+GHPAGE = "https://<your-github-username>.github.io/email_worker_parser/"
+UI_URL = "https://<your-github-username>.github.io/email_worker_parser/" # optional fallback
 ```
 
 ### GitHub Pages frontend
@@ -30,7 +31,7 @@ This repo now includes a minimal static frontend at `docs/index.html`.
 
 1. Push code to GitHub.
 2. In GitHub repo settings, enable Pages from branch `main` and folder `/docs`.
-3. Set `UI_URL` in your Worker vars to your Pages URL, then redeploy.
+3. Set `GHPAGE` in your Worker vars to your Pages URL, then redeploy.
 
 ```
 wrangler deploy

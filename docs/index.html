@@ -73,6 +73,25 @@
       }
     }
 
+    details.advanced {
+      margin-top: 10px;
+      border: 1px dashed var(--line);
+      border-radius: 10px;
+      padding: 8px 10px;
+      background: #faf6ee;
+    }
+
+    details.advanced summary {
+      cursor: pointer;
+      color: var(--ink-muted);
+      font-size: 0.9rem;
+      user-select: none;
+    }
+
+    details.advanced .inner {
+      margin-top: 10px;
+    }
+
     label {
       display: block;
       font-size: 0.86rem;
@@ -200,16 +219,19 @@
     <p class="sub">Minimal GitHub Pages frontend for create + read email.</p>
 
     <section class="panel">
-      <div class="grid">
-        <div>
-          <label for="apiBase">Worker API Base URL</label>
-          <input id="apiBase" placeholder="https://your-worker.workers.dev" />
-        </div>
+      <div>
         <div>
           <label for="address">Email Address</label>
           <input id="address" placeholder="example@your-domain.com" />
         </div>
       </div>
+
+      <details class="advanced">
+        <summary>Advanced: Worker API Base URL</summary>
+        <div class="inner">
+          <input id="apiBase" placeholder="https://your-worker.workers.dev" />
+        </div>
+      </details>
 
       <div class="actions">
         <button id="createBtn">Create New Address</button>
@@ -231,7 +253,8 @@
       emails: document.getElementById('emails')
     };
 
-    const savedBase = localStorage.getItem('apiBase') || '';
+    const defaultBase = window.location.origin;
+    const savedBase = localStorage.getItem('apiBase') || defaultBase;
     els.apiBase.value = savedBase;
 
     function normalizeBase(raw) {
@@ -249,10 +272,7 @@
     }
 
     function getBase() {
-      const base = normalizeBase(els.apiBase.value);
-      if (!base) {
-        throw new Error('Please fill in Worker API Base URL first.');
-      }
+      const base = normalizeBase(els.apiBase.value || defaultBase);
       localStorage.setItem('apiBase', base);
       return base;
     }
