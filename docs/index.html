@@ -174,6 +174,56 @@
       gap: 10px;
     }
 
+    .sponsor {
+      margin-top: 16px;
+      border-top: 1px dashed var(--line);
+      padding-top: 14px;
+    }
+
+    .sponsor h2 {
+      margin: 0;
+      font-size: 1rem;
+      letter-spacing: -0.01em;
+    }
+
+    .sponsor-sub {
+      margin: 6px 0 10px;
+      color: var(--ink-muted);
+      font-size: 0.88rem;
+    }
+
+    .sponsor-list {
+      display: grid;
+      gap: 8px;
+    }
+
+    .sponsor-item {
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: #fff;
+      padding: 10px;
+    }
+
+    .sponsor-item .name {
+      font-size: 0.87rem;
+      color: var(--ink-muted);
+      margin: 0;
+    }
+
+    .sponsor-item .hash {
+      margin: 6px 0 0;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.85rem;
+      line-height: 1.45;
+      word-break: break-all;
+    }
+
+    .sponsor-empty {
+      margin: 0;
+      color: var(--ink-muted);
+      font-size: 0.88rem;
+    }
+
     .mail {
       border: 1px solid var(--line);
       background: #fff;
@@ -244,6 +294,12 @@
 
       <div id="status" class="status">Inbox is ready.</div>
       <div id="emails" class="emails"></div>
+
+      <section class="sponsor">
+        <h2>Sponsor Channels</h2>
+        <p class="sponsor-sub">Configured from API `/sponsor/info`.</p>
+        <div id="sponsorList" class="sponsor-list"></div>
+      </section>
     </section>
   </main>
 
@@ -254,7 +310,8 @@
       createBtn: document.getElementById('createBtn'),
       fetchBtn: document.getElementById('fetchBtn'),
       status: document.getElementById('status'),
-      emails: document.getElementById('emails')
+      emails: document.getElementById('emails'),
+      sponsorList: document.getElementById('sponsorList')
     };
 
     const POLL_INTERVAL_MS = 3000;
@@ -306,6 +363,48 @@
 
     function clearEmails() {
       els.emails.innerHTML = '';
+    }
+
+    function renderSponsorChannels(channels) {
+      els.sponsorList.innerHTML = '';
+
+      if (!Array.isArray(channels) || channels.length === 0) {
+        const empty = document.createElement('p');
+        empty.className = 'sponsor-empty';
+        empty.textContent = 'No sponsor channel configured.';
+        els.sponsorList.appendChild(empty);
+        return;
+      }
+
+      const frag = document.createDocumentFragment();
+      for (const channel of channels) {
+        const card = document.createElement('article');
+        card.className = 'sponsor-item';
+
+        const name = document.createElement('p');
+        name.className = 'name';
+        name.textContent = channel.name || (channel.currency ? channel.currency + ' Transfer' : 'Sponsor Channel');
+
+        const hash = document.createElement('p');
+        hash.className = 'hash';
+        hash.textContent = channel.receive_hash || '-';
+
+        card.appendChild(name);
+        card.appendChild(hash);
+        frag.appendChild(card);
+      }
+
+      els.sponsorList.appendChild(frag);
+    }
+
+    async function loadSponsorInfo() {
+      try {
+        const body = await apiGet('/sponsor/info');
+        const channels = body && body.data ? body.data.channels : [];
+        renderSponsorChannels(channels || []);
+      } catch (_) {
+        renderSponsorChannels([]);
+      }
     }
 
     function buildSignature(items) {
@@ -409,7 +508,9 @@
 
     els.createBtn.addEventListener('click', onCreateAddress);
     els.fetchBtn.addEventListener('click', onFetchEmails);
+    els.apiBase.addEventListener('change', loadSponsorInfo);
     startAutoPolling();
+    loadSponsorInfo();
   </script>
 </body>
 </html>

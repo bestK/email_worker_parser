@@ -7,6 +7,8 @@ export interface Env {
     EMAIL_DOMAIN: string;
     GHPAGE?: string;
     UI_URL?: string;
+    SPONSOR_CURRENCY?: string;
+    SPONSOR_RECEIVE_HASH?: string;
 }
 
 interface Ctx { }
@@ -191,6 +193,26 @@ register('GET', '/email/:address', async (request, env, ctx, params) => {
     }
 });
 
+register('GET', '/sponsor/info', async (request, env, ctx, params) => {
+    const currency = (env.SPONSOR_CURRENCY || '').trim();
+    const receiveHash = (env.SPONSOR_RECEIVE_HASH || '').trim();
+
+    const channels = (currency && receiveHash)
+        ? [{
+            name: `${currency} Transfer`,
+            currency,
+            receive_hash: receiveHash,
+        }]
+        : [];
+
+    return jsonResponse({
+        success: true,
+        data: {
+            channels,
+        },
+    });
+});
+
 
 
 
@@ -213,7 +235,7 @@ export default {
         }
 
         return new Response(JSON.stringify({
-            error: 'Invalid path. Use /email/create or /email/:address'
+            error: 'Invalid path. Use /email/create, /email/:address, or /sponsor/info'
         }), { status: 404, headers: { 'content-type': 'application/json', ...CORS_HEADERS } });
     },
 

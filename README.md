@@ -9,6 +9,7 @@ Cloudflare Email Worker + D1 + GitHub Pages frontend.
 - Generate random inbox addresses via `/email/create`
 - Receive emails through Cloudflare Email Routing and store them in D1
 - Read inbox messages via `/email/:address?limit=10`
+- Expose sponsor channel config via `/sponsor/info`
 - Serve frontend from `GHPAGE` URL directly through Worker (`/` and `/ui`)
 - Auto refresh inbox in frontend every 3 seconds
 
@@ -43,6 +44,8 @@ database_id = "<your_database_id>"
 EMAIL_DOMAIN = "example.com"
 forward_address = "a@example.com;b@example.com"
 GHPAGE = "https://<your-github-username>.github.io/sample-mail/"
+SPONSOR_CURRENCY = "SOL"
+SPONSOR_RECEIVE_HASH = "<wallet_or_receive_hash>"
 ```
 
 4) Deploy worker
@@ -95,6 +98,29 @@ Get messages:
 
 ```http
 GET /email/{address}?limit=10
+```
+
+Get sponsor info:
+
+```http
+GET /sponsor/info
+```
+
+Response example:
+
+```json
+{
+  "success": true,
+  "data": {
+    "channels": [
+      {
+        "name": "SOL Transfer",
+        "currency": "SOL",
+        "receive_hash": "3eTz3jCELZGjH9oJ5WT4u7jSGF98vanLgrkGwFCwYFoo"
+      }
+    ]
+  }
+}
 ```
 
 ## Frontend (GitHub Pages)
