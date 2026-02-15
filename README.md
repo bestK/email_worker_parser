@@ -59,6 +59,17 @@ Set a catch-all rule in Cloudflare Email Routing to this Worker, for example:
 
 Without this rule, emails will not be delivered to the Worker.
 
+### DNS Records
+
+After enabling Cloudflare Email Routing, add or verify the DNS records shown in your Cloudflare dashboard (exact values may vary by account).
+
+- `MX`: Route incoming mail for `EMAIL_DOMAIN` to Cloudflare Email Routing
+- `TXT (SPF)`: Authorize Cloudflare mail gateway for receiving/forwarding
+- `TXT (DKIM)`: Enable signing verification if required by dashboard
+- `TXT (_dmarc)`: Recommended to reduce spoofing and spam classification
+
+Tip: use the exact record values from the Cloudflare Email Routing page, then test `/email/create` and your inbound mail flow after DNS propagation.
+
 ## API
 
 Create inbox:
