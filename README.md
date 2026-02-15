@@ -34,6 +34,10 @@ wrangler deploy
 # create a new email address
 get https://yourname.workers.dev/email/create
 
+# NOTE:
+# /email/create 现在仅生成随机地址，不再动态调用 Cloudflare API 创建 routing rule。
+# 需要你在 Cloudflare Email Routing 里预先配置兜底规则（如 *@EMAIL_DOMAIN -> email_worker_parser）。
+
 {
     "success": true,
     "data": {

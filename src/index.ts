@@ -1,5 +1,4 @@
 import PostalMime, { Email } from 'postal-mime';
-import { CloudflareClient } from './cf_api';
 import { parsers } from './parser/index.js';
 import { EmailMessage } from "cloudflare:email";
 
@@ -70,51 +69,21 @@ function matchRoute(method: string, url: string): { handler: Handler, params: Re
 
 // --- 路由处理逻辑 ---
 
-// 创建 Email 地址
+// 创建 Email 地址（不再按地址动态创建 Cloudflare Email Routing 规则）
+// 前置要求：Cloudflare 邮件路由中需有一条兜底规则把邮件交给本 Worker（例如 *@EMAIL_DOMAIN -> email_worker_parser）
 register('GET', '/email/create', async (request, env, ctx, params) => {
-    const client = new CloudflareClient({
-        apiKey: env.CLOUDFLARE_API_KEY,
-        email: env.CLOUDFLARE_EMAIL,
-        accountId: env.ACCOUNT_ID,
-        zoneId: env.ZONE_ID
-    });
-
     const randomEmail = Math.random().toString(36).substring(2, 15)
         + Math.random().toString(36).substring(2, 15)
         + '@' + env.EMAIL_DOMAIN;
 
-    try {
-        const rule = await client.email.rules.create({
-            zoneId: env.ZONE_ID,
-            name: `Forward to ${randomEmail}`,
-            enabled: true,
-            priority: 10,
-            matchers: [{ type: 'literal', field: 'to', value: randomEmail }],
-            actions: [{ type: 'worker', value: ['email_worker_parser'] }]
-        });
-
-        if (rule && rule.success) {
-            return new Response(JSON.stringify({
-                success: true,
-                data: {
-                    fetch_endpoint: `/email/${randomEmail}`,
-                    address: randomEmail
-                }
-            }), { headers: { 'content-type': 'application/json' } });
-        } else {
-            return new Response(JSON.stringify({
-                success: false,
-                error: 'Failed to create email rule via Cloudflare API',
-                details: rule?.errors ?? 'Unknown API error'
-            }), { status: 500, headers: { 'content-type': 'application/json' } });
+    return new Response(JSON.stringify({
+        success: true,
+        data: {
+            fetch_endpoint: `/email/${randomEmail}`,
+            address: randomEmail,
+            mode: 'catch_all_worker_rule'
         }
-    } catch (error: any) {
-        return new Response(JSON.stringify({
-            success: false,
-            error: 'Error communicating with Cloudflare API',
-            details: error.message
-        }), { status: 500, headers: { 'content-type': 'application/json' } });
-    }
+    }), { headers: { 'content-type': 'application/json' } });
 });
 
 // email/:address 路由处理
