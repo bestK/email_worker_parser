@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Email Worker UI</title>
+  <title>Email Inbox UI</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600&family=IBM+Plex+Mono:wght@400;500&display=swap');
 
@@ -215,8 +215,8 @@
 </head>
 <body>
   <main class="shell">
-    <h1>Email Worker UI</h1>
-    <p class="sub">Minimal GitHub Pages frontend for create + read email.</p>
+    <h1>Email Inbox UI</h1>
+    <p class="sub">Minimal frontend for create + read email.</p>
 
     <section class="panel">
       <div>
@@ -227,9 +227,9 @@
       </div>
 
       <details class="advanced">
-        <summary>Advanced: Worker API Base URL</summary>
+        <summary>Advanced: API Base URL</summary>
         <div class="inner">
-          <input id="apiBase" placeholder="https://your-worker.workers.dev" />
+          <input id="apiBase" placeholder="https://your-api.example.com" />
         </div>
       </details>
 
@@ -252,6 +252,10 @@
       status: document.getElementById('status'),
       emails: document.getElementById('emails')
     };
+
+    const POLL_INTERVAL_MS = 3000;
+    let pollingTimer = null;
+    let autoFetching = false;
 
     const defaultBase = window.location.origin;
     const savedBase = localStorage.getItem('apiBase') || defaultBase;
@@ -366,8 +370,29 @@
       }
     }
 
+    function startAutoPolling() {
+      if (pollingTimer) return;
+
+      pollingTimer = setInterval(async () => {
+        const addr = els.address.value.trim();
+        if (!addr || autoFetching) return;
+
+        try {
+          autoFetching = true;
+          const body = await apiGet('/email/' + encodeURIComponent(addr) + '?limit=10');
+          renderEmails(body.data || []);
+          setStatus('Auto refreshed every 3s.', false);
+        } catch (err) {
+          setStatus(err.message || String(err), true);
+        } finally {
+          autoFetching = false;
+        }
+      }, POLL_INTERVAL_MS);
+    }
+
     els.createBtn.addEventListener('click', onCreateAddress);
     els.fetchBtn.addEventListener('click', onFetchEmails);
+    startAutoPolling();
   </script>
 </body>
 </html>
