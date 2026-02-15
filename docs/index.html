@@ -175,44 +175,28 @@
     }
 
     .sponsor {
-      margin-top: 18px;
-      border-radius: 14px;
-      border: 1px solid #e7e3d9;
-      background:
-        radial-gradient(120% 180% at 100% 0%, rgba(234, 175, 67, 0.14), rgba(234, 175, 67, 0) 50%),
-        linear-gradient(145deg, #fffdf8, #fffaf0);
-      padding: 14px;
+      margin-top: 14px;
+      margin-bottom: 10px;
+      border-top: 1px dashed var(--line);
+      padding-top: 10px;
     }
 
-    .sponsor-head {
-      display: flex;
+    .sponsor-mark {
+      display: inline-flex;
       align-items: center;
-      justify-content: space-between;
-      gap: 10px;
-    }
-
-    .sponsor h2 {
-      margin: 0;
-      font-size: 1.02rem;
-      letter-spacing: -0.01em;
-    }
-
-    .sponsor-badge {
-      border: 1px solid #e7dcc2;
-      color: #715c20;
-      background: #fff4d6;
-      border-radius: 999px;
-      padding: 4px 9px;
-      font-size: 0.75rem;
-      font-weight: 600;
+      gap: 6px;
+      margin-bottom: 8px;
+      color: #6b6b6b;
+      font-size: 0.74rem;
       letter-spacing: 0.04em;
       text-transform: uppercase;
     }
 
-    .sponsor-sub {
-      margin: 8px 0 12px;
-      color: #5f5a4e;
-      font-size: 0.88rem;
+    .sponsor-mark svg {
+      width: 14px;
+      height: 14px;
+      display: block;
+      stroke: #7a7a7a;
     }
 
     .sponsor-list {
@@ -221,11 +205,10 @@
     }
 
     .sponsor-item {
-      border: 1px solid #ede6d3;
-      border-radius: 11px;
-      background: #fffefb;
-      padding: 11px;
-      box-shadow: 0 4px 14px rgba(73, 57, 20, 0.05);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: #fff;
+      padding: 9px;
       animation: fadeIn 260ms ease;
     }
 
@@ -237,35 +220,35 @@
     }
 
     .sponsor-item .name {
-      font-size: 0.82rem;
-      color: #6f6552;
+      font-size: 0.74rem;
+      color: #7a7a7a;
       margin: 0;
       text-transform: uppercase;
-      letter-spacing: 0.05em;
-      font-weight: 600;
+      letter-spacing: 0.04em;
+      font-weight: 500;
     }
 
     .sponsor-item .hash {
-      margin: 8px 0 0;
+      margin: 7px 0 0;
       font-family: 'IBM Plex Mono', monospace;
-      font-size: 0.85rem;
+      font-size: 0.8rem;
       line-height: 1.45;
       word-break: break-all;
-      background: #fff;
-      border: 1px solid #efe8d9;
+      background: #fcfcfc;
+      border: 1px solid #ededed;
       border-radius: 8px;
-      padding: 8px;
-      color: #2f2920;
+      padding: 7px;
+      color: #404040;
     }
 
     .copy-btn {
-      border: 1px solid #dccaa0;
+      border: 1px solid #e1e1e1;
       border-radius: 8px;
       background: #fff;
-      color: #4b3f24;
-      padding: 7px 10px;
-      font-size: 0.78rem;
-      font-weight: 600;
+      color: #5f5f5f;
+      padding: 6px 9px;
+      font-size: 0.72rem;
+      font-weight: 500;
       cursor: pointer;
       transition: transform 120ms ease, background 120ms ease;
       white-space: nowrap;
@@ -273,17 +256,17 @@
 
     .copy-btn:hover {
       transform: translateY(-1px);
-      background: #fff7e5;
+      background: #f8f8f8;
     }
 
     .sponsor-empty {
       margin: 0;
-      color: #655e4f;
-      font-size: 0.88rem;
-      border: 1px dashed #e4dcc8;
+      color: #777;
+      font-size: 0.8rem;
+      border: 1px dashed #e8e8e8;
       border-radius: 10px;
-      background: rgba(255, 255, 255, 0.65);
-      padding: 10px;
+      background: #fcfcfc;
+      padding: 8px;
     }
 
     .mail {
@@ -358,11 +341,15 @@
       <div id="emails" class="emails"></div>
 
       <section class="sponsor">
-        <div class="sponsor-head">
-          <h2>Sponsor Channels</h2>
-          <span class="sponsor-badge">Support</span>
+        <div class="sponsor-mark" aria-label="sponsor">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M4 8h12v5a4 4 0 0 1-4 4H8a4 4 0 0 1-4-4V8z"></path>
+            <path d="M16 10h2a2 2 0 1 1 0 4h-2"></path>
+            <path d="M7 5c0-1 1-2 2-2"></path>
+            <path d="M11 5c0-1 1-2 2-2"></path>
+          </svg>
+          Sponsor
         </div>
-        <p class="sponsor-sub">Configured from API `/sponsor/info`.</p>
         <div id="sponsorList" class="sponsor-list"></div>
       </section>
     </section>
