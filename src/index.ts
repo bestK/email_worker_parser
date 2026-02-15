@@ -471,7 +471,11 @@ export default {
             const msgTo: any = (message as any).to;
             const msgFrom: any = (message as any).from;
             const envelopeTo = (Array.isArray(msgTo) ? msgTo[0] : msgTo) || parsedEmail.to?.[0]?.address || 'None';
-            const envelopeFrom = (Array.isArray(msgFrom) ? msgFrom[0] : msgFrom) || parsedEmail.from?.address;
+            const envelopeFrom = (Array.isArray(msgFrom) ? msgFrom[0] : msgFrom) || parsedEmail.from?.address || 'None';
+
+            // D1 does not accept `undefined` bind values
+            const html = parsedEmail.html ?? null;
+            const text = parsedEmail.text ?? null;
 
             await env.DB.prepare(
                 `INSERT INTO Email ("subject", "from", "to", "html", "text") VALUES (?, ?, ?, ?, ?)`
@@ -480,12 +484,12 @@ export default {
                     parsedEmail.subject ?? 'None',
                     envelopeFrom,
                     envelopeTo,
-                    parsedEmail.html,
-                    parsedEmail.text
+                    html,
+                    text
                 )
                 .run();
         } catch (error) {
-            console.error('Insert email error:', error.message);
+            console.error('Insert email error:', (error as any)?.message ?? error);
         } finally {
             const list = (env.forward_address || '')
                 .split(';')
