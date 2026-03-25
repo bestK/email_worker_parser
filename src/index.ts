@@ -241,7 +241,7 @@ export default {
 
     async email(message: EmailMessage, env: Env, ctx: Ctx): Promise<void> {
         try {
-            const rawEmail = await streamToArrayBuffer(message.raw, message.rawSize);
+            const rawEmail = await streamToArrayBuffer(message.raw, Number(message.rawSize));
             const parser = new PostalMimeCtor();
             const parsedEmail: any = await parser.parse(rawEmail);
 
