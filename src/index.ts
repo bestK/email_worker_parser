@@ -4,7 +4,7 @@ import * as PostalMimeMod from './vendor/postal-mime-node.js';
 export interface Env {
     DB: D1Database;
     forward_address: string;
-    EMAIL_DOMAIN: string;
+    email_domain: string;
     GHPAGE?: string;
     UI_URL?: string;
     SPONSOR_CURRENCY?: string;
@@ -143,7 +143,7 @@ function matchRoute(method: string, url: string): { handler: Handler, params: Re
 // 创建 Email 地址（不再按地址动态创建 Cloudflare Email Routing 规则）
 // 前置要求：Cloudflare 邮件路由中需有一条兜底规则把邮件交给本 Worker（例如 *@EMAIL_DOMAIN -> sample-mail）
 register('GET', '/email/create', async (request, env, ctx, params) => {
-    const domain = (env.EMAIL_DOMAIN || '').trim();
+    const domain = (env.email_domain || '').trim();
     if (!domain) {
         return jsonResponse({
             success: false,

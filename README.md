@@ -41,7 +41,7 @@ database_name = "<db_name>"
 database_id = "<your_database_id>"
 
 [vars]
-EMAIL_DOMAIN = "example.com"
+email_domain = "example.com"
 forward_address = "a@example.com;b@example.com"
 GHPAGE = "https://<your-github-username>.github.io/sample-mail/"
 SPONSOR_CURRENCY = "SOL"
@@ -58,7 +58,7 @@ npm run deploy
 
 Set a catch-all rule in Cloudflare Email Routing to this Worker, for example:
 
-- `*@EMAIL_DOMAIN -> sample-mail`
+- `*@email_domain -> sample-mail`
 
 Without this rule, emails will not be delivered to the Worker.
 
@@ -66,7 +66,7 @@ Without this rule, emails will not be delivered to the Worker.
 
 After enabling Cloudflare Email Routing, add or verify the DNS records shown in your Cloudflare dashboard (exact values may vary by account).
 
-- `MX`: Route incoming mail for `EMAIL_DOMAIN` to Cloudflare Email Routing
+- `MX`: Route incoming mail for `email_domain` to Cloudflare Email Routing
 - `TXT (SPF)`: Authorize Cloudflare mail gateway for receiving/forwarding
 - `TXT (DKIM)`: Enable signing verification if required by dashboard
 - `TXT (_dmarc)`: Recommended to reduce spoofing and spam classification
@@ -131,5 +131,5 @@ Response example:
 
 ## Notes
 
-- If `EMAIL_DOMAIN` is missing, `/email/create` returns a config error
+- If `email_domain` is missing, `/email/create` returns a config error
 - `forward_address` can be empty; use `;` to separate multiple emails

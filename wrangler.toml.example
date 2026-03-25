@@ -9,11 +9,7 @@ database_id = ""
 
 [vars]
 forward_address = ""
-CLOUDFLARE_EMAIL = ""
-CLOUDFLARE_API_KEY = ""
-ZONE_ID = ""
-ACCOUNT_ID = ""
-EMAIL_DOMAIN = ""
+email_domain = ""
 GHPAGE = "https://<your-github-username>.github.io/sample-mail/"
 UI_URL = "https://<your-github-username>.github.io/sample-mail/"
 SPONSOR_CURRENCY = "SOL"
