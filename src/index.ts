@@ -1,5 +1,7 @@
 import { EmailMessage } from 'cloudflare:email';
 import * as PostalMimeMod from './vendor/postal-mime-node.js';
+// @ts-ignore — plain JS module
+import { normalizeEmailDomains, createInboxAddress } from './email-domain.js';
 
 export interface Env {
     DB: D1Database;
@@ -143,26 +145,26 @@ function matchRoute(method: string, url: string): { handler: Handler, params: Re
 // 创建 Email 地址（不再按地址动态创建 Cloudflare Email Routing 规则）
 // 前置要求：Cloudflare 邮件路由中需有一条兜底规则把邮件交给本 Worker（例如 *@EMAIL_DOMAIN -> sample-mail）
 register('GET', '/email/create', async (request, env, ctx, params) => {
-    const domain = (env.email_domain || '').trim();
-    if (!domain) {
+    try {
+        const domains = normalizeEmailDomains(env.email_domain);
+        const url = new URL(request.url);
+        const requestedDomain = url.searchParams.get('domain') || undefined;
+        const address = createInboxAddress(domains, { requestedDomain });
+
+        return jsonResponse({
+            success: true,
+            data: {
+                fetch_endpoint: `/email/${address}`,
+                address,
+                mode: 'catch_all_worker_rule',
+            },
+        });
+    } catch (e: any) {
         return jsonResponse({
             success: false,
-            error: 'EMAIL_DOMAIN is not configured',
+            error: e.message || 'Failed to create inbox',
         }, { status: 500 });
     }
-
-    const randomEmail = Math.random().toString(36).substring(2, 15)
-        + Math.random().toString(36).substring(2, 15)
-        + '@' + domain;
-
-    return jsonResponse({
-        success: true,
-        data: {
-            fetch_endpoint: `/email/${randomEmail}`,
-            address: randomEmail,
-            mode: 'catch_all_worker_rule',
-        },
-    });
 });
 
 // email/:address 路由处理
