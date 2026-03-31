@@ -106,6 +106,55 @@ function resolvePostalMimeCtor(mod: any): any {
 
 const PostalMimeCtor: any = resolvePostalMimeCtor(PostalMimeMod as any);
 
+function normalizeTimeZone(raw: string | null): string | null {
+    if (!raw) return null;
+
+    try {
+        new Intl.DateTimeFormat('en-US', { timeZone: raw });
+        return raw;
+    } catch {
+        return null;
+    }
+}
+
+function parseUtcTimestamp(raw: unknown): Date | null {
+    if (typeof raw !== 'string' || !raw.trim()) return null;
+
+    const normalized = raw.includes('T') ? raw : raw.replace(' ', 'T');
+    const withZone = /(?:Z|[+-]\d{2}:\d{2})$/.test(normalized) ? normalized : `${normalized}Z`;
+    const date = new Date(withZone);
+
+    return Number.isNaN(date.getTime()) ? null : date;
+}
+
+function createTimeZoneFormatter(timeZone: string): Intl.DateTimeFormat {
+    return new Intl.DateTimeFormat('en-US', {
+        timeZone,
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false,
+        hourCycle: 'h23',
+    });
+}
+
+function formatUtcTimestampForTimeZone(raw: unknown, formatter: Intl.DateTimeFormat): unknown {
+    const date = parseUtcTimestamp(raw);
+    if (!date) return raw;
+
+    const parts = Object.fromEntries(
+        formatter
+            .formatToParts(date)
+            .filter((part) => part.type !== 'literal')
+            .map((part) => [part.type, part.value])
+    );
+
+    return `${parts.year}-${parts.month}-${parts.day} ${parts.hour}:${parts.minute}:${parts.second}`;
+}
+
 // --- 简易路由系统 ---
 type Handler = (request: Request, env: Env, ctx: Ctx, params: Record<string, string>) => Promise<Response>;
 const routes: { method: string; path: string; handler: Handler }[] = [];
@@ -174,8 +223,10 @@ register('GET', '/email/:address', async (request, env, ctx, params) => {
 
     // 获取查询参数 'limit'
     const limit = url.searchParams.get('limit');
+    const timeZone = normalizeTimeZone(url.searchParams.get('timezone'));
 
     const maxResults = parseLimit(limit);
+    const formatter = timeZone ? createTimeZoneFormatter(timeZone) : null;
 
     try {
         const { results, success, meta } = await env.DB
@@ -184,7 +235,14 @@ register('GET', '/email/:address', async (request, env, ctx, params) => {
             .run();
 
         if (success) {
-            return jsonResponse({ success: true, data: results });
+            const data = formatter && Array.isArray(results)
+                ? results.map((item: Record<string, unknown>) => ({
+                    ...item,
+                    createdAt: formatUtcTimestampForTimeZone(item.createdAt, formatter),
+                }))
+                : results;
+
+            return jsonResponse({ success: true, data });
         } else {
             console.error("D1 query failed:", meta);
             return jsonResponse({ success: false, error: 'Failed to retrieve emails' }, { status: 500 });

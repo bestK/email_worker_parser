@@ -395,6 +395,21 @@
       return base;
     }
 
+    function getClientTimeZone() {
+      try {
+        return Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
+      } catch (_) {
+        return 'UTC';
+      }
+    }
+
+    function withClientTimeZone(path) {
+      const timeZone = getClientTimeZone();
+      if (!timeZone) return path;
+      const separator = path.includes('?') ? '&' : '?';
+      return path + separator + 'timezone=' + encodeURIComponent(timeZone);
+    }
+
     async function apiGet(path) {
       const base = getBase();
       const res = await fetch(base + path, { method: 'GET' });
@@ -552,7 +567,7 @@
 
         setBusy(true);
         setStatus('Checking for new mail...', false);
-        const body = await apiGet('/email/' + encodeURIComponent(addr) + '?limit=10');
+        const body = await apiGet(withClientTimeZone('/email/' + encodeURIComponent(addr) + '?limit=10'));
         renderEmails(body.data || []);
       } catch (err) {
         clearEmails();
@@ -571,7 +586,7 @@
 
         try {
           autoFetching = true;
-          const body = await apiGet('/email/' + encodeURIComponent(addr) + '?limit=10');
+          const body = await apiGet(withClientTimeZone('/email/' + encodeURIComponent(addr) + '?limit=10'));
           const items = body.data || [];
           const nextSignature = buildSignature(items);
           if (nextSignature !== lastRenderedSignature) {
