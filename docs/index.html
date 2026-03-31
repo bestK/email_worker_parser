@@ -172,6 +172,7 @@
       margin-top: 16px;
       display: grid;
       gap: 10px;
+      min-width: 0;
     }
 
     .sponsor {
@@ -202,9 +203,14 @@
     .sponsor-list {
       display: grid;
       gap: 8px;
+      min-width: 0;
     }
 
     .sponsor-item {
+      width: 100%;
+      max-width: 100%;
+      min-width: 0;
+      overflow: hidden;
       border: 1px solid var(--line);
       border-radius: 10px;
       background: #fff;
@@ -214,18 +220,23 @@
 
     .sponsor-item .row {
       display: flex;
+      flex-wrap: wrap;
       align-items: center;
       justify-content: space-between;
       gap: 10px;
+      min-width: 0;
     }
 
     .sponsor-item .name {
+      min-width: 0;
       font-size: 0.74rem;
       color: #7a7a7a;
       margin: 0;
       text-transform: uppercase;
       letter-spacing: 0.04em;
       font-weight: 500;
+      overflow-wrap: anywhere;
+      word-break: break-word;
     }
 
     .sponsor-item .hash {
@@ -242,6 +253,8 @@
     }
 
     .copy-btn {
+      flex-shrink: 0;
+      max-width: 100%;
       border: 1px solid #e1e1e1;
       border-radius: 8px;
       background: #fff;
@@ -270,27 +283,90 @@
     }
 
     .mail {
+      width: 100%;
+      max-width: 100%;
+      min-width: 0;
+      overflow: hidden;
       border: 1px solid var(--line);
       background: #fff;
       border-radius: 12px;
       padding: 12px;
       animation: fadeIn 260ms ease;
+      display: grid;
+      gap: 10px;
+    }
+
+    .mail-head {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 8px 12px;
+      min-width: 0;
+    }
+
+    .mail-title-wrap {
+      flex: 1 1 280px;
+      min-width: 0;
     }
 
     .mail h3 {
-      margin: 0 0 6px;
+      margin: 0;
       font-size: 1rem;
       line-height: 1.4;
+      overflow-wrap: anywhere;
+      word-break: break-word;
     }
 
-    .meta {
-      margin: 0;
+    .mail-time {
+      flex: 0 1 auto;
+      max-width: 100%;
+      min-width: 0;
+      padding: 4px 8px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: #fcfcfc;
+      color: var(--ink-muted);
+      font-size: 0.78rem;
+      line-height: 1.4;
+      overflow-wrap: anywhere;
+      word-break: break-word;
+    }
+
+    .mail-meta {
+      display: grid;
+      gap: 6px;
+      min-width: 0;
+    }
+
+    .mail-meta-row {
+      display: grid;
+      grid-template-columns: 44px minmax(0, 1fr);
+      gap: 8px;
+      min-width: 0;
+      align-items: start;
+    }
+
+    .mail-meta-label {
+      color: #7a7a7a;
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      line-height: 1.5;
+    }
+
+    .mail-meta-value {
+      min-width: 0;
       color: var(--ink-muted);
       font-size: 0.85rem;
+      line-height: 1.5;
+      overflow-wrap: anywhere;
+      word-break: break-word;
     }
 
     .txt {
-      margin: 8px 0 0;
+      margin: 0;
+      padding: 10px;
       white-space: pre-wrap;
       line-height: 1.45;
       font-size: 0.92rem;
@@ -298,6 +374,18 @@
       color: #1f1f1f;
       max-height: 12em;
       overflow: auto;
+      overflow-wrap: anywhere;
+      word-break: break-word;
+      background: #fcfcfc;
+      border: 1px solid #ededed;
+      border-radius: 10px;
+    }
+
+    @media (max-width: 540px) {
+      .mail-meta-row {
+        grid-template-columns: 1fr;
+        gap: 2px;
+      }
     }
 
     @keyframes fadeIn {
@@ -508,6 +596,23 @@
         .join('||');
     }
 
+    function createMailMetaRow(label, value) {
+      const row = document.createElement('div');
+      row.className = 'mail-meta-row';
+
+      const labelEl = document.createElement('span');
+      labelEl.className = 'mail-meta-label';
+      labelEl.textContent = label;
+
+      const valueEl = document.createElement('span');
+      valueEl.className = 'mail-meta-value';
+      valueEl.textContent = value || '-';
+
+      row.appendChild(labelEl);
+      row.appendChild(valueEl);
+      return row;
+    }
+
     function renderEmails(items) {
       lastRenderedSignature = buildSignature(items);
       clearEmails();
@@ -521,18 +626,33 @@
         const card = document.createElement('article');
         card.className = 'mail';
 
+        const head = document.createElement('div');
+        head.className = 'mail-head';
+
+        const titleWrap = document.createElement('div');
+        titleWrap.className = 'mail-title-wrap';
+
         const title = document.createElement('h3');
         title.textContent = item.subject || '(No subject)';
 
-        const meta = document.createElement('p');
-        meta.className = 'meta';
-        meta.textContent = 'From: ' + (item.from || '-') + ' | To: ' + (item.to || '-') + ' | ' + (item.createdAt || '-');
+        const time = document.createElement('div');
+        time.className = 'mail-time';
+        time.textContent = item.createdAt || '-';
+
+        titleWrap.appendChild(title);
+        head.appendChild(titleWrap);
+        head.appendChild(time);
+
+        const meta = document.createElement('div');
+        meta.className = 'mail-meta';
+        meta.appendChild(createMailMetaRow('From', item.from || '-'));
+        meta.appendChild(createMailMetaRow('To', item.to || '-'));
 
         const text = document.createElement('p');
         text.className = 'txt';
         text.textContent = item.text || item.html || '(No content)';
 
-        card.appendChild(title);
+        card.appendChild(head);
         card.appendChild(meta);
         card.appendChild(text);
         frag.appendChild(card);
