@@ -10,6 +10,30 @@ export function normalizeEmailDomains(raw) {
 }
 
 /**
+ * @param {string} pattern
+ * @returns {boolean}
+ */
+export function isWildcardDomainPattern(pattern) {
+  return String(pattern || '').includes('*');
+}
+
+/**
+ * @param {string} pattern
+ * @param {string} domain
+ * @returns {boolean}
+ */
+export function matchesDomainPattern(pattern, domain) {
+  const patternLabels = String(pattern || '').trim().toLowerCase().split('.').filter(Boolean);
+  const domainLabels = String(domain || '').trim().toLowerCase().split('.').filter(Boolean);
+
+  if (patternLabels.length !== domainLabels.length) {
+    return false;
+  }
+
+  return patternLabels.every((label, index) => label === '*' || label === domainLabels[index]);
+}
+
+/**
  * @param {string[]} domains
  * @param {string | undefined | null} requestedDomain
  * @returns {string}
@@ -21,15 +45,20 @@ export function pickEmailDomain(domains, requestedDomain) {
 
   const normalizedRequested = (requestedDomain || '').trim().toLowerCase();
   if (normalizedRequested) {
-    const matched = domains.find((domain) => domain.toLowerCase() === normalizedRequested);
+    const matched = domains.find((domain) => matchesDomainPattern(domain, normalizedRequested));
     if (!matched) {
       throw new Error(`Requested domain is not allowed: ${requestedDomain}`);
     }
-    return matched;
+    return normalizedRequested;
   }
 
-  const index = Math.floor(Math.random() * domains.length);
-  return domains[index];
+  const exactDomains = domains.filter((domain) => !isWildcardDomainPattern(domain));
+  if (exactDomains.length === 0) {
+    throw new Error('A requested domain is required when EMAIL_DOMAIN only contains wildcard patterns');
+  }
+
+  const index = Math.floor(Math.random() * exactDomains.length);
+  return exactDomains[index];
 }
 
 /**
