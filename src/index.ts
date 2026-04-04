@@ -7,8 +7,6 @@ import {
     createTimeZoneFormatter,
     formatUtcTimestampForTimeZone,
 } from './timezone.js';
-// @ts-ignore
-import uiHtml from '../docs/index.html';
 
 export interface Env {
     DB: D1Database;
@@ -238,17 +236,8 @@ register('GET', '/sponsor/info', async (request, env, ctx, params) => {
 
 
 
-register('GET', '/', async (request, env, ctx, params) => {
-    // Return bundled local HTML only in DEV mode
-    if (env.DEV) {
-        return new Response(uiHtml, {
-            headers: { 'content-type': 'text/html;charset=UTF-8' }
-        });
-    }
-
-    // Default or Production mode: Fetch remote UI if configured, or use fallback URL
-    return serveUiFromUrl(env);
-});
+// The static UI is now served via [assets] in wrangler.toml.
+// The Worker will only handle API requests and other non-static paths.
 
 
 export default {

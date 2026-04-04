@@ -2,7 +2,7 @@
 
 Cloudflare Email Worker + D1 + GitHub Pages frontend.
 
-![Sample Mail UI](docs/screenshot.svg)
+![Sample Mail UI](assets/screenshot.svg)
 
 ## Features
 
@@ -15,20 +15,20 @@ Cloudflare Email Worker + D1 + GitHub Pages frontend.
 
 ## Quick Start
 
-1) Install dependencies
+1. Install dependencies
 
 ```bash
 npm install
 ```
 
-2) Create D1 and initialize schema
+2. Create D1 and initialize schema
 
 ```bash
 wrangler d1 create <db_name>
 wrangler d1 execute <db_name> --file ./sql/schema.sql
 ```
 
-3) Configure `wrangler.toml`
+3. Configure `wrangler.toml`
 
 ```toml
 name = "sample-mail"
@@ -48,7 +48,7 @@ SPONSOR_CURRENCY = "SOL"
 SPONSOR_RECEIVE_HASH = "<wallet_or_receive_hash>"
 ```
 
-4) Deploy worker
+4. Deploy worker
 
 ```bash
 npm run deploy
@@ -85,12 +85,12 @@ Response example:
 
 ```json
 {
-  "success": true,
-  "data": {
-    "fetch_endpoint": "/email/abc123@example.com",
-    "address": "abc123@example.com",
-    "mode": "catch_all_worker_rule"
-  }
+    "success": true,
+    "data": {
+        "fetch_endpoint": "/email/abc123@example.com",
+        "address": "abc123@example.com",
+        "mode": "catch_all_worker_rule"
+    }
 }
 ```
 
@@ -110,23 +110,23 @@ Response example:
 
 ```json
 {
-  "success": true,
-  "data": {
-    "channels": [
-      {
-        "name": "SOL Transfer",
-        "currency": "SOL",
-        "receive_hash": "3eTz3jCELZGjH9oJ5WT4u7jSGF98vanLgrkGwFCwYFoo"
-      }
-    ]
-  }
+    "success": true,
+    "data": {
+        "channels": [
+            {
+                "name": "SOL Transfer",
+                "currency": "SOL",
+                "receive_hash": "3eTz3jCELZGjH9oJ5WT4u7jSGF98vanLgrkGwFCwYFoo"
+            }
+        ]
+    }
 }
 ```
 
 ## Frontend (GitHub Pages)
 
-- Frontend source is `docs/index.html`
-- Workflow deploys `docs/` to `gh-pages` automatically
+- Frontend source is `assets/index.html`
+- Workflow deploys `assets/` to `gh-pages` automatically
 - Worker reads `GHPAGE` and returns that UI from `/` and `/ui`
 
 ## Notes
