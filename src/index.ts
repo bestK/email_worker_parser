@@ -115,6 +115,36 @@ function resolvePostalMimeCtor(mod: any): any {
 
 const PostalMimeCtor: any = resolvePostalMimeCtor(PostalMimeMod as any);
 
+/** Extract original alias address from DuckDuckGo forwarded email HTML. */
+function extractDuckDuckGoAlias(html: string): string | null {
+    const m = html.match(
+        /https:\/\/duckduckgo\.com\/email\/addresses\/([A-Za-z0-9_=+\/\-]+)/
+    );
+    if (!m) return null;
+    try {
+        const raw = m[1];
+        const padded = raw + '=='.slice(0, (4 - (raw.length % 4)) % 4);
+        const decoded = atob(padded.replace(/-/g, '+').replace(/_/g, '/'));
+        const addr = JSON.parse(decoded)?.address;
+        return typeof addr === 'string' && addr ? addr.toLowerCase() : null;
+    } catch {
+        return null;
+    }
+}
+
+/** Resolve forwarded-to address from headers, falling back to HTML body parsing. */
+function resolveForwardedTo(
+    headers: Array<{ key: string; value: string }>,
+    html: string | null,
+): string | null {
+    const fromHeader = headers.find(
+        (h) => h.key.toLowerCase() === 'x-forwarded-to'
+    )?.value;
+    if (fromHeader) return fromHeader;
+    if (html) return extractDuckDuckGoAlias(html);
+    return null;
+}
+
 // --- 简易路由系统 ---
 type Handler = (request: Request, env: Env, ctx: Ctx, params: Record<string, string>) => Promise<Response>;
 const routes: { method: string; path: string; handler: Handler }[] = [];
@@ -201,6 +231,7 @@ register('GET', '/email/:address', async (request, env, ctx, params) => {
             const data = Array.isArray(results)
                 ? results.map((item: Record<string, unknown>) => ({
                     ...item,
+                    forwarded_to: item.forwarded_to || (typeof item.html === 'string' ? extractDuckDuckGoAlias(item.html) : null),
                     createdAt: formatUtcTimestampForTimeZone(item.createdAt, formatter),
                 }))
                 : results;
@@ -294,15 +325,12 @@ export default {
             const envelopeTo = msgTo || parsedEmail.to?.[0]?.address || 'None';
             const envelopeFrom = msgFrom || parsedEmail.from?.address || 'None';
 
-            // Extract X-Forwarded-To header
-            const headers: Array<{ key: string; value: string }> = parsedEmail.headers || [];
-            const forwardedTo = headers.find(
-                (h: { key: string; value: string }) => h.key.toLowerCase() === 'x-forwarded-to'
-            )?.value ?? null;
-
             // D1 does not accept `undefined` bind values
             const html = parsedEmail.html ?? null;
             const text = parsedEmail.text ?? null;
+
+            const headers: Array<{ key: string; value: string }> = parsedEmail.headers || [];
+            const forwardedTo = resolveForwardedTo(headers, html);
 
             await env.DB.prepare(
                 `INSERT INTO Email ("subject", "from", "to", "forwarded_to", "html", "text") VALUES (?, ?, ?, ?, ?, ?)`
