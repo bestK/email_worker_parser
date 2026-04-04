@@ -193,7 +193,7 @@ register('GET', '/email/:address', async (request, env, ctx, params) => {
 
     try {
         const { results, success, meta } = await env.DB
-            .prepare('SELECT "subject", "from", "to", "html", "text", "createdAt" FROM Email WHERE lower("to") = lower(?) ORDER BY createdAt DESC LIMIT ?')
+            .prepare('SELECT "id", "subject", "from", "to", "html", "text", "createdAt" FROM Email WHERE lower("to") = lower(?) ORDER BY createdAt DESC LIMIT ?')
             .bind(address, maxResults)
             .run();
 
