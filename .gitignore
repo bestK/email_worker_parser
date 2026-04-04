@@ -175,3 +175,5 @@ wrangler.toml
 .wrangler/
 wrangler.toml.prod
 .ace-tool/
+
+.DS_Store
