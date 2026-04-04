@@ -862,6 +862,9 @@
                     meta.className = 'mail-meta';
                     meta.appendChild(createMailMetaRow('From', item.from || '-'));
                     meta.appendChild(createMailMetaRow('To', item.to || '-'));
+                    if (item.forwarded_to) {
+                        meta.appendChild(createMailMetaRow('Forwarded-To', item.forwarded_to));
+                    }
 
                     // Content Area
                     const contentWrap = document.createElement('div');
