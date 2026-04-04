@@ -7,6 +7,7 @@ import {
     createTimeZoneFormatter,
     formatUtcTimestampForTimeZone,
 } from './timezone.js';
+import { extractDuckDuckGoAlias, resolveForwardedTo } from './forwarded-to.js';
 
 // Minimal SVG envelope icon for favicon fallback
 const FAVICON_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="black"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>`;
@@ -115,35 +116,6 @@ function resolvePostalMimeCtor(mod: any): any {
 
 const PostalMimeCtor: any = resolvePostalMimeCtor(PostalMimeMod as any);
 
-/** Extract original alias address from DuckDuckGo forwarded email HTML. */
-function extractDuckDuckGoAlias(html: string): string | null {
-    const m = html.match(
-        /https:\/\/duckduckgo\.com\/email\/addresses\/([A-Za-z0-9_=+\/\-]+)/
-    );
-    if (!m) return null;
-    try {
-        const raw = m[1];
-        const padded = raw + '=='.slice(0, (4 - (raw.length % 4)) % 4);
-        const decoded = atob(padded.replace(/-/g, '+').replace(/_/g, '/'));
-        const addr = JSON.parse(decoded)?.address;
-        return typeof addr === 'string' && addr ? addr.toLowerCase() : null;
-    } catch {
-        return null;
-    }
-}
-
-/** Resolve forwarded-to address from headers, falling back to HTML body parsing. */
-function resolveForwardedTo(
-    headers: Array<{ key: string; value: string }>,
-    html: string | null,
-): string | null {
-    const fromHeader = headers.find(
-        (h) => h.key.toLowerCase() === 'x-forwarded-to'
-    )?.value;
-    if (fromHeader) return fromHeader;
-    if (html) return extractDuckDuckGoAlias(html);
-    return null;
-}
 
 // --- 简易路由系统 ---
 type Handler = (request: Request, env: Env, ctx: Ctx, params: Record<string, string>) => Promise<Response>;

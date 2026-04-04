@@ -370,7 +370,7 @@
 
             .mail-meta-row {
                 display: grid;
-                grid-template-columns: 44px minmax(0, 1fr);
+                grid-template-columns: 110px minmax(0, 1fr);
                 gap: 8px;
                 min-width: 0;
                 align-items: start;
@@ -863,7 +863,7 @@
                     meta.appendChild(createMailMetaRow('From', item.from || '-'));
                     meta.appendChild(createMailMetaRow('To', item.to || '-'));
                     if (item.forwarded_to) {
-                        meta.appendChild(createMailMetaRow('Forwarded-To', item.forwarded_to));
+                        meta.appendChild(createMailMetaRow('Forwarded To', item.forwarded_to));
                     }
 
                     // Content Area
