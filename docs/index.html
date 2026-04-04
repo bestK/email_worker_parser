@@ -364,7 +364,7 @@
       word-break: break-word;
     }
 
-    .txt {
+    .txt, .html-view {
       margin: 0;
       padding: 10px;
       white-space: pre-wrap;
@@ -372,13 +372,59 @@
       font-size: 0.92rem;
       font-family: 'IBM Plex Mono', monospace;
       color: #1f1f1f;
-      max-height: 12em;
+      min-height: 100px;
+      max-height: 30em;
       overflow: auto;
       overflow-wrap: anywhere;
       word-break: break-word;
       background: #fcfcfc;
       border: 1px solid #ededed;
       border-radius: 10px;
+    }
+
+    .html-view {
+      padding: 0;
+      background: #fff;
+      display: block;
+      border: 1px solid #ededed;
+    }
+
+    .html-view iframe {
+      width: 100%;
+      height: 30em;
+      border: none;
+      display: block;
+      border-radius: 10px;
+    }
+
+    .mail-content-toolbar {
+      display: flex;
+      justify-content: flex-end;
+      gap: 6px;
+      margin-bottom: 4px;
+    }
+
+    .toggle-btn {
+      appearance: none;
+      background: #f1f1f1;
+      border: 1px solid #e1e1e1;
+      border-radius: 6px;
+      padding: 4px 10px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: #666;
+      cursor: pointer;
+      transition: all 120ms ease;
+    }
+
+    .toggle-btn.active {
+      background: var(--button);
+      color: #fff;
+      border-color: #000;
+    }
+
+    .toggle-btn:hover:not(.active) {
+      background: #e5e5e5;
     }
 
     @media (max-width: 540px) {
@@ -613,6 +659,41 @@
       return row;
     }
 
+    function renderMailBody(item, mode) {
+      if (mode === 'html' && item.html) {
+        const container = document.createElement('div');
+        container.className = 'html-view';
+        const iframe = document.createElement('iframe');
+        // Sandbox for safety: allow-same-origin is needed for srcdoc sometimes but use caution
+        iframe.sandbox = 'allow-popups allow-popups-to-escape-sandbox';
+        iframe.srcdoc = `
+          <!DOCTYPE html>
+          <html>
+            <head>
+              <base target="_blank">
+              <style>
+                body {
+                  margin: 12px;
+                  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+                  line-height: 1.5;
+                  color: #111;
+                }
+                img { max-width: 100%; height: auto; }
+              </style>
+            </head>
+            <body>${item.html}</body>
+          </html>
+        `;
+        container.appendChild(iframe);
+        return container;
+      }
+
+      const text = document.createElement('p');
+      text.className = 'txt';
+      text.textContent = item.text || item.html || '(No content)';
+      return text;
+    }
+
     function renderEmails(items) {
       lastRenderedSignature = buildSignature(items);
       clearEmails();
@@ -648,13 +729,48 @@
         meta.appendChild(createMailMetaRow('From', item.from || '-'));
         meta.appendChild(createMailMetaRow('To', item.to || '-'));
 
-        const text = document.createElement('p');
-        text.className = 'txt';
-        text.textContent = item.text || item.html || '(No content)';
+        // Content Area
+        const contentWrap = document.createElement('div');
+        contentWrap.className = 'mail-content';
+
+        const toolbar = document.createElement('div');
+        toolbar.className = 'mail-content-toolbar';
+
+        const btnHtml = document.createElement('button');
+        btnHtml.className = 'toggle-btn';
+        btnHtml.textContent = 'HTML';
+        const btnRaw = document.createElement('button');
+        btnRaw.className = 'toggle-btn';
+        btnRaw.textContent = 'Raw';
+
+        let currentMode = item.html ? 'html' : 'raw';
+        if (currentMode === 'html') btnHtml.classList.add('active');
+        else btnRaw.classList.add('active');
+
+        const bodyContainer = document.createElement('div');
+        bodyContainer.appendChild(renderMailBody(item, currentMode));
+
+        const updateView = (mode) => {
+          if (currentMode === mode) return;
+          currentMode = mode;
+          btnHtml.classList.toggle('active', mode === 'html');
+          btnRaw.classList.toggle('active', mode === 'raw');
+          bodyContainer.innerHTML = '';
+          bodyContainer.appendChild(renderMailBody(item, mode));
+        };
+
+        btnHtml.onclick = () => updateView('html');
+        btnRaw.onclick = () => updateView('raw');
+
+        if (item.html) toolbar.appendChild(btnHtml);
+        toolbar.appendChild(btnRaw);
+
+        contentWrap.appendChild(toolbar);
+        contentWrap.appendChild(bodyContainer);
 
         card.appendChild(head);
         card.appendChild(meta);
-        card.appendChild(text);
+        card.appendChild(contentWrap);
         frag.appendChild(card);
       }
 
