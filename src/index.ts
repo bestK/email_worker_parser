@@ -7,6 +7,8 @@ import {
     createTimeZoneFormatter,
     formatUtcTimestampForTimeZone,
 } from './timezone.js';
+// @ts-ignore
+import uiHtml from '../docs/index.html';
 
 export interface Env {
     DB: D1Database;
@@ -14,6 +16,7 @@ export interface Env {
     email_domain: string;
     GHPAGE?: string;
     UI_URL?: string;
+    DEV?: boolean | string;
     SPONSOR_CURRENCY?: string;
     SPONSOR_RECEIVE_HASH?: string;
 }
@@ -235,8 +238,15 @@ register('GET', '/sponsor/info', async (request, env, ctx, params) => {
 
 
 
-// index
 register('GET', '/', async (request, env, ctx, params) => {
+    // Return bundled local HTML only in DEV mode
+    if (env.DEV) {
+        return new Response(uiHtml, {
+            headers: { 'content-type': 'text/html;charset=UTF-8' }
+        });
+    }
+
+    // Default or Production mode: Fetch remote UI if configured, or use fallback URL
     return serveUiFromUrl(env);
 });
 

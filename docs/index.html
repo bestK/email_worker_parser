@@ -364,6 +364,10 @@
       word-break: break-word;
     }
 
+    .txt-wrapper {
+      position: relative;
+    }
+
     .txt, .html-view {
       margin: 0;
       padding: 10px;
@@ -380,6 +384,44 @@
       background: #fcfcfc;
       border: 1px solid #ededed;
       border-radius: 10px;
+    }
+
+    .copy-raw-btn {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      width: 28px;
+      height: 28px;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(2px);
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      cursor: pointer;
+      opacity: 0;
+      transition: all 180ms ease;
+      z-index: 10;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    }
+
+    .txt-wrapper:hover .copy-raw-btn {
+      opacity: 1;
+    }
+
+    .copy-raw-btn:hover {
+      background: #fff;
+      border-color: #bbb;
+      transform: translateY(-1px);
+    }
+
+    .copy-raw-btn svg {
+      width: 14px;
+      height: 14px;
+      stroke: #555;
+      fill: none;
     }
 
     .html-view {
@@ -688,10 +730,49 @@
         return container;
       }
 
+      const wrapper = document.createElement('div');
+      wrapper.className = 'txt-wrapper';
+
+      const textVal = item.text || item.html || '(No content)';
       const text = document.createElement('p');
       text.className = 'txt';
-      text.textContent = item.text || item.html || '(No content)';
-      return text;
+      text.textContent = textVal;
+
+      const copyBtn = document.createElement('button');
+      copyBtn.className = 'copy-raw-btn';
+      copyBtn.type = 'button';
+      copyBtn.title = 'Copy raw text';
+      copyBtn.innerHTML = `
+        <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+          <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+        </svg>
+      `;
+
+      copyBtn.onclick = async () => {
+        try {
+          await navigator.clipboard.writeText(textVal);
+          copyBtn.innerHTML = `
+            <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="stroke: #059669;">
+              <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+          `;
+          setTimeout(() => {
+            copyBtn.innerHTML = `
+              <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+              </svg>
+            `;
+          }, 1500);
+        } catch (_) {
+          // ignore
+        }
+      };
+
+      wrapper.appendChild(text);
+      wrapper.appendChild(copyBtn);
+      return wrapper;
     }
 
     function renderEmails(items) {
