@@ -193,7 +193,7 @@ register('GET', '/email/:address', async (request, env, ctx, params) => {
 
     try {
         const { results, success, meta } = await env.DB
-            .prepare('SELECT "id", "subject", "from", "to", "html", "text", "createdAt" FROM Email WHERE lower("to") = lower(?) ORDER BY createdAt DESC LIMIT ?')
+            .prepare('SELECT "id", "subject", "from", "to", "forwarded_to", "html", "text", "createdAt" FROM Email WHERE lower("to") = lower(?) ORDER BY createdAt DESC LIMIT ?')
             .bind(address, maxResults)
             .run();
 
@@ -294,17 +294,24 @@ export default {
             const envelopeTo = msgTo || parsedEmail.to?.[0]?.address || 'None';
             const envelopeFrom = msgFrom || parsedEmail.from?.address || 'None';
 
+            // Extract X-Forwarded-To header
+            const headers: Array<{ key: string; value: string }> = parsedEmail.headers || [];
+            const forwardedTo = headers.find(
+                (h: { key: string; value: string }) => h.key.toLowerCase() === 'x-forwarded-to'
+            )?.value ?? null;
+
             // D1 does not accept `undefined` bind values
             const html = parsedEmail.html ?? null;
             const text = parsedEmail.text ?? null;
 
             await env.DB.prepare(
-                `INSERT INTO Email ("subject", "from", "to", "html", "text") VALUES (?, ?, ?, ?, ?)`
+                `INSERT INTO Email ("subject", "from", "to", "forwarded_to", "html", "text") VALUES (?, ?, ?, ?, ?, ?)`
             )
                 .bind(
                     parsedEmail.subject ?? 'None',
                     envelopeFrom,
                     envelopeTo,
+                    forwardedTo,
                     html,
                     text
                 )

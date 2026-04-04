@@ -7,6 +7,7 @@ CREATE TABLE Email (
     subject VARCHAR(255),
     "from" VARCHAR(255),
     "to" VARCHAR(255),
+    "forwarded_to" VARCHAR(255),
     html TEXT,
     text TEXT,
     createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
